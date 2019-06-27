@@ -4,7 +4,7 @@
   "description": "small size web game",
   "main": "index.js",
   "scripts": {
-    "build": "./node_modules/.bin/rollup .",
+    "build": "./node_modules/.bin/rollup -c --environment INCLUDE_DEPS,BUILD:production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
