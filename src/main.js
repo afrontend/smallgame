@@ -1,43 +1,113 @@
-let c = null; // canvas
-let ctx = null; // context
+const CIRCLES = 999;
 
-function drawScreen(ctx) {
-  ctx.fillStyle = "red";
-  ctx.fillRect(0, 0, 100, 100);
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(500,500);
-  ctx.stroke();
+function makeCircles(len) {
+  const circles = [];
+  let count = len;
+  while (count--) {
+    const radius = getRandom(100);
+    const x = getRandomX(radius);
+    const y = getRandomY(radius);
+    const dx = getRandomArbitrary(-1, 1);
+    const dy = getRandomArbitrary(-1, 1);
+    const xRange = getXRange(radius);
+    const yRange = getYRange(radius);
+    circles.push({ radius, x, y, dx, dy, xRange, yRange });
+  }
+  return circles;
 }
 
-let x = Math.random() * window.innerWidth;
-let y = Math.random() * window.innerHeight;
-let dx = Math.random() * 100
-let dy = Math.random() * 100
-let radius = Math.random() * 200;
-function drawCircle(ctx) {
+function getXRange(min) {
+  return { min: min, max: window.innerWidth - min };
+}
+
+function getYRange(min) {
+  return { min: min, max: window.innerHeight - min };
+}
+
+function getRandomX(min) {
+  return getRandomArbitrary(min, window.innerWidth - min);
+}
+
+function getRandomY(min) {
+  return getRandomArbitrary(min, window.innerHeight - min);
+}
+
+function getRandom(max) {
+  return Math.random() * max;
+}
+
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function clearScreen(ctx) {
+  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+}
+
+function drawCircle(ctx, x, y, radius) {
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI*2, false);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(20, 100, 20, 0.1)"
+  ctx.fill();
+}
+
+function drawCircles(ctx, circles) {
+  circles.forEach(function(circle) {
+    drawCircle(ctx, circle.x, circle.y, circle.radius)
+  });
+}
+
+function isRange(value, range) {
+  return value >= range.min && value <= range.max;
+}
+
+function getNextCoord(circle, circles) {
+  let x = circle.x;
+  let y = circle.y;
+  let dx = circle.dx;
+  let dy = circle.dy;
+  if (isRange(x + dx, circle.xRange)) {
+    x += dx;
+  } else {
+    dx = -dx;
+  }
+  if (isRange(y + dy, circle.yRange)) {
+    y += dy;
+  } else {
+    dy = -dy;
+  }
+  return { x, y, dx, dy };
+}
+
+function updateCircles(circles) {
+  return circles.map(function(circle) {
+    const { x, y, dx, dy } = getNextCoord(circle, circles);
+    circle.x = x;
+    circle.y = y;
+    circle.dx = dx;
+    circle.dy = dy;
+    return circle;
+  });
+}
+
+function startAnimation(ctx) {
+  let circles = makeCircles(CIRCLES);
   function animate() {
     requestAnimationFrame(animate);
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI*2, false);
-    ctx.stroke();
-    if( x + radius > innerWidth || x - radius < 0 ) dx = -dx;
-    x += dx;
-    if( y + radius > innerHeight || y - radius < 0 ) dy = -dy;
-    y += dy;
+    clearScreen(ctx);
+    drawCircles(ctx, circles);
+    circles = updateCircles(circles);
   }
-
   animate();
 }
 
 function activate() {
-  c = document.querySelector("canvas");
+  const c = document.querySelector("canvas");
   c.width = window.innerWidth;
   c.height = window.innerHeight;
-  ctx = c.getContext("2d");
-  //drawScreen(ctx);
-  drawCircle(ctx);
+  const ctx = c.getContext("2d");
+  startAnimation(ctx);
 }
 
 function processEventKey(e) {

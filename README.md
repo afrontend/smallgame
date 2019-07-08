@@ -2,7 +2,16 @@
 
 ## Build
 
+```
+npm install
+npm run build
+```
+
 ## Usage
+
+```
+npm start
+```
 
 ## License
 
