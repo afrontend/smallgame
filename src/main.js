@@ -1,4 +1,4 @@
-const CIRCLES = 999;
+const CIRCLES = 99;
 
 function makeCircles(len) {
   const circles = [];
@@ -44,17 +44,21 @@ function clearScreen(ctx) {
   ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 }
 
-function drawCircle(ctx, x, y, radius) {
+function drawCircle(ctx, circle) {
   ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI*2, false);
+  ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI*2, false);
   ctx.stroke();
-  ctx.fillStyle = "rgba(20, 100, 20, 0.1)"
+  if (circle.fillStyle) {
+    ctx.fillStyle = circle.fillStyle;
+  } else {
+    ctx.fillStyle = "rgba(20, 100, 20, 0.1)"
+  }
   ctx.fill();
 }
 
 function drawCircles(ctx, circles) {
   circles.forEach(function(circle) {
-    drawCircle(ctx, circle.x, circle.y, circle.radius)
+    drawCircle(ctx, circle)
   });
 }
 
@@ -87,6 +91,11 @@ function updateCircles(circles) {
     circle.y = y;
     circle.dx = dx;
     circle.dy = dy;
+    if (isRange(mouse.x, { min: x - circle.radius, max: x + circle.radius }) && isRange(mouse.y, { min: y - circle.radius, max: y + circle.radius})) {
+      circle.fillStyle = 'rgb(100, 100, 200, 0.6)';
+    } else {
+      circle.fillStyle = null;
+    }
     return circle;
   });
 }
@@ -110,10 +119,18 @@ function activate() {
   startAnimation(ctx);
 }
 
-function processEventKey(e) {
+function processKeyEvent(e) {
   const letterPressed = String.fromCharCode(e.keyCode)
   console.log(letterPressed.toLowerCase());
 }
 
+let mouse = {};
+
+function processMouseEvent(e) {
+  mouse = {x: e.x, y: e.y};
+  console.log(mouse);
+}
+
 window.addEventListener('load', activate);
-window.addEventListener('keyup', processEventKey, true);
+window.addEventListener('keyup', processKeyEvent, true);
+window.addEventListener('mousemove', processMouseEvent, true);
