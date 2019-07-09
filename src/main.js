@@ -66,36 +66,72 @@ function isRange(value, range) {
   return value >= range.min && value <= range.max;
 }
 
-function getNextCoord(circle, circles) {
+function applyFreeStyle(circle) {
   let x = circle.x;
   let y = circle.y;
   let dx = circle.dx;
   let dy = circle.dy;
-  if (isRange(x + dx, circle.xRange)) {
-    x += dx;
-  } else {
-    dx = -dx;
+  if (dx) {
+    if (isRange(x + dx, circle.xRange)) {
+      x += dx;
+    } else {
+      dx = -dx;
+    }
   }
-  if (isRange(y + dy, circle.yRange)) {
+
+  if (dy) {
+    if (isRange(y + dy, circle.yRange)) {
+      y += dy;
+    } else {
+      dy = -dy;
+    }
+  }
+
+  return { x, y, dx, dy };
+}
+
+function applyGravityStyle(circle) {
+  let x = circle.x;
+  let y = circle.y;
+  let dx = circle.dx;
+  let dy = circle.dy;
+  if (dy) {
+    if (y + circle.radius > window.innerHeight) {
+      dy = -dy;
+    } else {
+      dy += 1;
+    }
     y += dy;
+  }
+  return { x, y, dx, dy };
+}
+
+function applyFixStyle(circle) {
+  let x = circle.x;
+  let y = circle.y;
+  let dx = circle.dx;
+  let dy = circle.dy;
+  if (isRange(mouse.x, { min: x - circle.radius, max: x + circle.radius }) && isRange(mouse.y, { min: y - circle.radius, max: y + circle.radius})) {
+    circle.fillStyle = 'rgb(100, 100, 200, 0.6)';
+    dx = null;
+    dy = null;
   } else {
-    dy = -dy;
+    circle.fillStyle = null;
+    if (!circle.dx) {
+      dx = getRandomArbitrary(-1, 1);
+      dy = getRandomArbitrary(-1, 1);
+    }
   }
   return { x, y, dx, dy };
 }
 
 function updateCircles(circles) {
   return circles.map(function(circle) {
-    const { x, y, dx, dy } = getNextCoord(circle, circles);
+    let { x, y, dx, dy } = applyGravityStyle(circle);
     circle.x = x;
     circle.y = y;
     circle.dx = dx;
     circle.dy = dy;
-    if (isRange(mouse.x, { min: x - circle.radius, max: x + circle.radius }) && isRange(mouse.y, { min: y - circle.radius, max: y + circle.radius})) {
-      circle.fillStyle = 'rgb(100, 100, 200, 0.6)';
-    } else {
-      circle.fillStyle = null;
-    }
     return circle;
   });
 }
@@ -134,3 +170,4 @@ function processMouseEvent(e) {
 window.addEventListener('load', activate);
 window.addEventListener('keyup', processKeyEvent, true);
 window.addEventListener('mousemove', processMouseEvent, true);
+o
