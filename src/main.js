@@ -1,4 +1,4 @@
-const CIRCLES = 99;
+const CIRCLES = 999;
 
 function makeCircles(len) {
   const circles = [];
@@ -63,76 +63,60 @@ function drawCircles(ctx, circles) {
 }
 
 function isRange(value, range) {
-  return value >= range.min && value <= range.max;
+  return value ? (value >= range.min && value <= range.max) : false;
 }
 
 function applyFreeStyle(circle) {
-  let x = circle.x;
-  let y = circle.y;
-  let dx = circle.dx;
-  let dy = circle.dy;
-  if (dx) {
-    if (isRange(x + dx, circle.xRange)) {
-      x += dx;
+  const c = Object.assign({}, circle);
+  if (c.dx) {
+    if (isRange(c.x + c.dx, c.xRange)) {
+      c.x += c.dx;
     } else {
-      dx = -dx;
+      c.dx = -c.dx;
     }
   }
 
-  if (dy) {
-    if (isRange(y + dy, circle.yRange)) {
-      y += dy;
+  if (c.dy) {
+    if (isRange(c.y + c.dy, c.yRange)) {
+      c.y += c.dy;
     } else {
-      dy = -dy;
+      c.dy = -c.dy;
     }
   }
 
-  return { x, y, dx, dy };
+  return c;
 }
 
 function applyGravityStyle(circle) {
-  let x = circle.x;
-  let y = circle.y;
-  let dx = circle.dx;
-  let dy = circle.dy;
-  if (dy) {
-    if (y + circle.radius > window.innerHeight) {
-      dy = -dy;
-    } else {
-      dy += 1;
-    }
-    y += dy;
+  const c = Object.assign({}, circle);
+  if (c.y + c.radius > window.innerHeight) {
+    c.dy = -c.dy;
+  } else {
+    c.dy += 1;
   }
-  return { x, y, dx, dy };
+  c.y += c.dy;
+  return c;
 }
 
 function applyFixStyle(circle) {
-  let x = circle.x;
-  let y = circle.y;
-  let dx = circle.dx;
-  let dy = circle.dy;
-  if (isRange(mouse.x, { min: x - circle.radius, max: x + circle.radius }) && isRange(mouse.y, { min: y - circle.radius, max: y + circle.radius})) {
-    circle.fillStyle = 'rgb(100, 100, 200, 0.6)';
-    dx = null;
-    dy = null;
+  const c = Object.assign({}, circle);
+  if (isRange(mouse.x, { min: c.x - c.radius, max: c.x + c.radius }) && isRange(mouse.y, { min: c.y - c.radius, max: c.y + c.radius})) {
+    c.fillStyle = 'rgb(100, 100, 200, 0.6)';
+    c.dx = null;
+    c.dy = null;
   } else {
-    circle.fillStyle = null;
-    if (!circle.dx) {
-      dx = getRandomArbitrary(-1, 1);
-      dy = getRandomArbitrary(-1, 1);
+    c.fillStyle = null;
+    if (!c.dx) {
+      c.dx = getRandomArbitrary(-1, 1);
+      c.dy = getRandomArbitrary(-1, 1);
     }
   }
-  return { x, y, dx, dy };
+  return c;
 }
 
 function updateCircles(circles) {
   return circles.map(function(circle) {
-    let { x, y, dx, dy } = applyGravityStyle(circle);
-    circle.x = x;
-    circle.y = y;
-    circle.dx = dx;
-    circle.dy = dy;
-    return circle;
+    return applyFixStyle(applyGravityStyle(circle));
   });
 }
 
