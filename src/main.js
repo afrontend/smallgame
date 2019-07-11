@@ -1,5 +1,17 @@
 const CIRCLES = 999;
 
+function compose() {
+  var fns = arguments;
+
+  return function (result) {
+    for (var i = fns.length - 1; i > -1; i--) {
+      result = fns[i].call(this, result);
+    }
+
+    return result;
+  };
+};
+
 function makeCircles(len) {
   const circles = [];
   let count = len;
@@ -114,9 +126,12 @@ function applyFixStyle(circle) {
   return c;
 }
 
+const gravityStyle = compose(applyGravityStyle, applyFixStyle);
+const freeStyle = compose(applyFreeStyle, applyFixStyle);
+
 function updateCircles(circles) {
   return circles.map(function(circle) {
-    return applyFixStyle(applyGravityStyle(circle));
+    return freeStyle(circle);
   });
 }
 
