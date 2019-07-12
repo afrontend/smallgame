@@ -1,4 +1,4 @@
-const CIRCLES = 999;
+const CIRCLES = 99;
 
 function compose() {
   var fns = arguments;
@@ -16,6 +16,7 @@ function makeCircles(len) {
   const circles = [];
   let count = len;
   while (count--) {
+    const id = count;
     const radius = getRandom(100);
     const x = getRandomX(radius);
     const y = getRandomY(radius);
@@ -23,7 +24,7 @@ function makeCircles(len) {
     const dy = getRandomArbitrary(-1, 1);
     const xRange = getXRange(radius);
     const yRange = getYRange(radius);
-    circles.push({ radius, x, y, dx, dy, xRange, yRange });
+    circles.push({ id, radius, x, y, dx, dy, xRange, yRange });
   }
   return circles;
 }
@@ -65,6 +66,9 @@ function drawCircle(ctx, circle) {
   } else {
     ctx.fillStyle = "rgba(20, 100, 20, 0.1)"
   }
+  if (circle.lineWidth) {
+    ctx.lineWidth = circle.lineWidth;
+  }
   ctx.fill();
 }
 
@@ -78,7 +82,7 @@ function isRange(value, range) {
   return value ? (value >= range.min && value <= range.max) : false;
 }
 
-function applyFreeStyle(circle) {
+function applyFreeStyle({ circle, circles }) {
   const c = Object.assign({}, circle);
   if (c.dx) {
     if (isRange(c.x + c.dx, c.xRange)) {
@@ -87,7 +91,6 @@ function applyFreeStyle(circle) {
       c.dx = -c.dx;
     }
   }
-
   if (c.dy) {
     if (isRange(c.y + c.dy, c.yRange)) {
       c.y += c.dy;
@@ -95,11 +98,10 @@ function applyFreeStyle(circle) {
       c.dy = -c.dy;
     }
   }
-
-  return c;
+  return { circle: c, circles };
 }
 
-function applyGravityStyle(circle) {
+function applyGravityStyle({ circle, circles }) {
   const c = Object.assign({}, circle);
   if (c.y + c.radius > window.innerHeight) {
     c.dy = -c.dy;
@@ -107,10 +109,10 @@ function applyGravityStyle(circle) {
     c.dy += 1;
   }
   c.y += c.dy;
-  return c;
+  return { circle: c, circles };
 }
 
-function applyFixStyle(circle) {
+function applyFixStyle({ circle, circles }) {
   const c = Object.assign({}, circle);
   if (isRange(mouse.x, { min: c.x - c.radius, max: c.x + c.radius }) && isRange(mouse.y, { min: c.y - c.radius, max: c.y + c.radius})) {
     c.fillStyle = 'rgb(100, 100, 200, 0.6)';
@@ -123,15 +125,16 @@ function applyFixStyle(circle) {
       c.dy = getRandomArbitrary(-1, 1);
     }
   }
-  return c;
+  return { circle: c, circles };
 }
 
-const gravityStyle = compose(applyGravityStyle, applyFixStyle);
-const freeStyle = compose(applyFreeStyle, applyFixStyle);
+const gravityStyle = compose(applyFixStyle, applyGravityStyle);
+const freeStyle = compose(applyFixStyle, applyFreeStyle);
 
 function updateCircles(circles) {
   return circles.map(function(circle) {
-    return freeStyle(circle);
+    const { circle: c } = freeStyle({ circle, circles });
+    return c;
   });
 }
 
