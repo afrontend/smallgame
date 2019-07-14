@@ -12,6 +12,16 @@ function compose() {
   };
 };
 
+function createArrowObject(count) {
+    const id = count;
+    const x1 = window.innerWidth / 2 - 100;
+    const y1 = window.innerHeight - 100;
+    const x2 = 200;
+    const y2 = window.innerHeight;
+    const fillStyle = "red";
+    return { id, x1, y1, x2, y2 };
+}
+
 function makeCircles(len) {
   const circles = [];
   let count = len;
@@ -26,6 +36,8 @@ function makeCircles(len) {
     const yRange = getYRange(radius);
     circles.push({ id, radius, x, y, dx, dy, xRange, yRange });
   }
+
+  circles.push(createArrowObject(len + 1));
   return circles;
 }
 
@@ -72,6 +84,16 @@ function drawCircle(ctx, circle) {
   ctx.fill();
 }
 
+function drawArrow(ctx, circles) {
+  circles.forEach(function(arrow) {
+    const { x1, y1, x2, y2 } = arrow;
+    if (x1 && y1 && x2 && y2) {
+      ctx.fillStyle = arrow.fillStyle;
+      ctx.fillRect(x1, y1, x2, y2);
+    }
+  });
+}
+
 function drawCircles(ctx, circles) {
   circles.forEach(function(circle) {
     drawCircle(ctx, circle)
@@ -112,7 +134,7 @@ function applyGravityStyle({ circle, circles }) {
   return { circle: c, circles };
 }
 
-function applyFixStyle({ circle, circles }) {
+function stopCircle({ circle, circles }) {
   const c = Object.assign({}, circle);
   if (isRange(mouse.x, { min: c.x - c.radius, max: c.x + c.radius }) && isRange(mouse.y, { min: c.y - c.radius, max: c.y + c.radius})) {
     c.fillStyle = 'rgb(100, 100, 200, 0.6)';
@@ -128,12 +150,12 @@ function applyFixStyle({ circle, circles }) {
   return { circle: c, circles };
 }
 
-const gravityStyle = compose(applyFixStyle, applyGravityStyle);
-const freeStyle = compose(applyFixStyle, applyFreeStyle);
+const gravityStyle = compose(stopCircle, applyGravityStyle);
+const freeStyle = compose(stopCircle, applyFreeStyle);
 
 function updateCircles(circles) {
   return circles.map(function(circle) {
-    const { circle: c } = freeStyle({ circle, circles });
+    const { circle: c } = gravityStyle({ circle, circles });
     return c;
   });
 }
@@ -144,6 +166,7 @@ function startAnimation(ctx) {
     requestAnimationFrame(animate);
     clearScreen(ctx);
     drawCircles(ctx, circles);
+    drawArrow(ctx, circles);
     circles = updateCircles(circles);
   }
   animate();
