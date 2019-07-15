@@ -18,7 +18,6 @@ function createArrowObject(count) {
     const y1 = window.innerHeight - 100;
     const x2 = 200;
     const y2 = window.innerHeight;
-    const fillStyle = "red";
     return { id, x1, y1, x2, y2 };
 }
 
@@ -30,14 +29,14 @@ function makeCircles(len) {
     const radius = getRandom(100);
     const x = getRandomX(radius);
     const y = getRandomY(radius);
-    const dx = getRandomArbitrary(-1, 1);
-    const dy = getRandomArbitrary(-1, 1);
+    const dx = getRandomArbitrary(-2, 2);
+    const dy = getRandomArbitrary(-2, 2);
     const xRange = getXRange(radius);
     const yRange = getYRange(radius);
     circles.push({ id, radius, x, y, dx, dy, xRange, yRange });
   }
 
-  circles.push(createArrowObject(len + 1));
+  circles.push(createArrowObject(++len));
   return circles;
 }
 
@@ -58,11 +57,11 @@ function getRandomY(min) {
 }
 
 function getRandom(max) {
-  return Math.random() * max;
+  return Math.floor(Math.random() * max);
 }
 
 function getRandomArbitrary(min, max) {
-  return Math.random() * (max - min) + min;
+  return Math.floor(Math.random() * (max - min) + min);
 }
 
 function clearScreen(ctx) {
@@ -123,12 +122,15 @@ function applyFreeStyle({ circle, circles }) {
   return { circle: c, circles };
 }
 
+const gravity = 1;
+const friction = 0.7;
+
 function applyGravityStyle({ circle, circles }) {
   const c = Object.assign({}, circle);
-  if (c.y + c.radius > window.innerHeight) {
-    c.dy = -c.dy;
+  if (!isRange(c.y + c.dy, c.yRange)) {
+    c.dy = -c.dy * friction;
   } else {
-    c.dy += 1;
+    c.dy += gravity;
   }
   c.y += c.dy;
   return { circle: c, circles };
@@ -174,8 +176,8 @@ function startAnimation(ctx) {
 
 function activate() {
   const c = document.querySelector("canvas");
-  c.width = window.innerWidth;
-  c.height = window.innerHeight;
+  c.width = window.innerWidth - 10;
+  c.height = window.innerHeight - 10;
   const ctx = c.getContext("2d");
   startAnimation(ctx);
 }
@@ -195,4 +197,3 @@ function processMouseEvent(e) {
 window.addEventListener('load', activate);
 window.addEventListener('keyup', processKeyEvent, true);
 window.addEventListener('mousemove', processMouseEvent, true);
-o
