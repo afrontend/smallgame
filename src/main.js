@@ -16,9 +16,9 @@ function createArrowObject(count) {
     const id = count;
     const x1 = window.innerWidth / 2 - 100;
     const y1 = window.innerHeight - 100;
-    const x2 = 200;
-    const y2 = window.innerHeight;
-    return { id, x1, y1, x2, y2 };
+    const width = 200;
+    const height = 200;
+    return { id, x1, y1, width, height };
 }
 
 function makeCircles(len) {
@@ -85,10 +85,10 @@ function drawCircle(ctx, circle) {
 
 function drawArrow(ctx, circles) {
   circles.forEach(function(arrow) {
-    const { x1, y1, x2, y2 } = arrow;
-    if (x1 && y1 && x2 && y2) {
+    const { x1, y1, width, height } = arrow;
+    if (x1 && y1 && width && height) {
       ctx.fillStyle = arrow.fillStyle;
-      ctx.fillRect(x1, y1, x2, y2);
+      ctx.fillRect(x1, y1, width, height);
     }
   });
 }
@@ -138,7 +138,7 @@ function applyGravityStyle({ circle, circles }) {
 
 function stopCircle({ circle, circles }) {
   const c = Object.assign({}, circle);
-  if (isRange(mouse.x, { min: c.x - c.radius, max: c.x + c.radius }) && isRange(mouse.y, { min: c.y - c.radius, max: c.y + c.radius})) {
+  if (isRange(global.mouse.x, { min: c.x - c.radius, max: c.x + c.radius }) && isRange(global.mouse.y, { min: c.y - c.radius, max: c.y + c.radius})) {
     c.fillStyle = 'rgb(100, 100, 200, 0.6)';
     c.dx = null;
     c.dy = null;
@@ -152,6 +152,20 @@ function stopCircle({ circle, circles }) {
   return { circle: c, circles };
 }
 
+function moveArrow(key, circle) {
+  const c = Object.assign({}, circle);
+  if (key === DOWN) {
+    c.y1 += 1;
+  } else if (key === UP) {
+    c.y1 -= 1;
+  } else if (key === RIGHT) {
+    c.x1 += 1;
+  } else if (key === LEFT) {
+    c.x1 -= 1;
+  }
+  return c;
+}
+
 const gravityStyle = compose(stopCircle, applyGravityStyle);
 const freeStyle = compose(stopCircle, applyFreeStyle);
 
@@ -162,14 +176,31 @@ function updateCircles(circles) {
   });
 }
 
+function updateArrow(key, circles) {
+  if (!key) return circles;
+  return circles.map(function(arrow) {
+    const { x1, y1, width, height } = arrow;
+    if (x1 && y1 && width && height) {
+      return moveArrow(key, arrow);
+    }
+    return arrow;
+  });
+}
+
+const LEFT   = 37
+const UP     = 38
+const RIGHT  = 39
+const DOWN   = 40
+
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
   function animate() {
     requestAnimationFrame(animate);
     clearScreen(ctx);
     drawCircles(ctx, circles);
-    drawArrow(ctx, circles);
     circles = updateCircles(circles);
+    drawArrow(ctx, circles);
+    circles = updateArrow(global.key, circles);
   }
   animate();
 }
@@ -182,16 +213,20 @@ function activate() {
   startAnimation(ctx);
 }
 
+
+const global = {};
+global.mouse = {};
+global.key = {};
+
 function processKeyEvent(e) {
   const letterPressed = String.fromCharCode(e.keyCode)
-  console.log(letterPressed.toLowerCase());
+  global.key = e.keyCode;
+  console.log(e.keyCode, letterPressed.toLowerCase());
 }
 
-let mouse = {};
-
 function processMouseEvent(e) {
-  mouse = {x: e.x, y: e.y};
-  console.log(mouse);
+  global.mouse = {x: e.x, y: e.y};
+  console.log(global.mouse);
 }
 
 window.addEventListener('load', activate);
