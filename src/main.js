@@ -166,8 +166,8 @@ function moveArrow(key, circle) {
   return c;
 }
 
-const gravityStyle = compose(stopCircle, applyGravityStyle);
-const freeStyle = compose(stopCircle, applyFreeStyle);
+const gravityStyle = compose(applyGravityStyle);
+const freeStyle = compose(applyFreeStyle);
 
 function updateCircles(circles) {
   return circles.map(function(circle) {
@@ -207,12 +207,15 @@ function startAnimation(ctx) {
 
 function activate() {
   const c = document.querySelector("canvas");
-  c.width = window.innerWidth - 10;
-  c.height = window.innerHeight - 10;
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+  setTimeout(function() {
+    console.log(window.innerWidth, window.innerHeight);
+    console.log(c.width, c.height);
+  }.bind(this), 1000);
   const ctx = c.getContext("2d");
   startAnimation(ctx);
 }
-
 
 const global = {};
 global.mouse = {};
