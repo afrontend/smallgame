@@ -1,4 +1,6 @@
 const CIRCLES = 99;
+const gravity = 1;
+const friction = 0.9;
 
 function compose() {
   var fns = arguments;
@@ -12,12 +14,12 @@ function compose() {
   };
 };
 
-function createArrowObject(count) {
+function createArrow(count) {
     const id = count;
-    const x1 = window.innerWidth / 2 - 100;
-    const y1 = window.innerHeight - 100;
-    const width = 200;
-    const height = 200;
+    const width = 20;
+    const height = 100;
+    const x1 = (window.innerWidth / 2) - (width / 2);
+    const y1 = window.innerHeight - height;
     return { id, x1, y1, width, height };
 }
 
@@ -36,7 +38,7 @@ function makeCircles(len) {
     circles.push({ id, radius, x, y, dx, dy, xRange, yRange });
   }
 
-  circles.push(createArrowObject(++len));
+  circles.push(createArrow(++len));
   return circles;
 }
 
@@ -83,12 +85,41 @@ function drawCircle(ctx, circle) {
   ctx.fill();
 }
 
+function distance(x1, y1, x2, y2) {
+  return Math.floor(Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)));
+}
+
+function isArrow(item) {
+  if (!item) return false;
+  const { x1, y1, width, height } = item;
+  if (x1 && y1 && width && height) {
+    return true;
+  }
+  return false;
+}
+
+function isCircle(item) {
+  if (!item) return false;
+  const { x, y, radius } = item;
+  if (x && y && radius ) {
+    return true;
+  }
+  return false;
+}
+
+function isOverlap(arrow, circle) {
+  if (distance(arrow.x1, arrow.y1, circle.x, circle.y) <= circle.radius) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function drawArrow(ctx, circles) {
-  circles.forEach(function(arrow) {
-    const { x1, y1, width, height } = arrow;
-    if (x1 && y1 && width && height) {
-      ctx.fillStyle = arrow.fillStyle;
-      ctx.fillRect(x1, y1, width, height);
+  circles.forEach(function(item) {
+    if(isArrow(item)) {
+      ctx.fillStyle = item.fillStyle;
+      ctx.fillRect(item.x1, item.y1, item.width, item.height);
     }
   });
 }
@@ -121,9 +152,6 @@ function applyFreeStyle({ circle, circles }) {
   }
   return { circle: c, circles };
 }
-
-const gravity = 1;
-const friction = 0.7;
 
 function applyGravityStyle({ circle, circles }) {
   const c = Object.assign({}, circle);
@@ -178,13 +206,29 @@ function updateCircles(circles) {
 
 function updateArrow(key, circles) {
   if (!key) return circles;
-  return circles.map(function(arrow) {
-    const { x1, y1, width, height } = arrow;
-    if (x1 && y1 && width && height) {
-      return moveArrow(key, arrow);
+  return circles.map(function(item) {
+    if (isArrow(item)) {
+      return moveArrow(key, item);
     }
-    return arrow;
+    return item;
   });
+}
+
+function checkOverlap(circles) {
+  const arrow = circles.find(function (item) {
+    return isArrow(item);
+  });
+
+  if (arrow) {
+    return circles.map(function(item) {
+      if (isOverlap(arrow, item)) {
+        item.fillStyle = 'red';
+      }
+      return item;
+    });
+  } else {
+    return circles;
+  }
 }
 
 const LEFT   = 37
@@ -201,6 +245,7 @@ function startAnimation(ctx) {
     circles = updateCircles(circles);
     drawArrow(ctx, circles);
     circles = updateArrow(global.key, circles);
+    circles = checkOverlap(circles);
   }
   animate();
 }
