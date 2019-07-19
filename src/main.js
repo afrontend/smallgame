@@ -1,6 +1,7 @@
 const CIRCLES = 99;
 const gravity = 1;
 const friction = 0.9;
+const speed = 100;
 
 function compose() {
   var fns = arguments;
@@ -108,7 +109,11 @@ function isCircle(item) {
 }
 
 function isOverlap(arrow, circle) {
-  if (distance(arrow.x1, arrow.y1, circle.x, circle.y) <= circle.radius) {
+  if (distance(arrow.x1, arrow.y1, circle.x, circle.y) <= circle.radius ||
+    distance(arrow.x1 + arrow.width, arrow.y1, circle.x, circle.y) <= circle.radius ||
+    distance(arrow.x1, arrow.y1 + arrow.height, circle.x, circle.y) <= circle.radius ||
+    distance(arrow.x1 + arrow.width, arrow.y1 + arrow.height, circle.x, circle.y) <= circle.radius
+  ) {
     return true;
   } else {
     return false;
