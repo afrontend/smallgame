@@ -1,7 +1,6 @@
-const CIRCLES = 99;
+const CIRCLES = 9;
 const gravity = 1;
-const friction = 0.9;
-const speed = 100;
+const friction = 0.5;
 
 function compose() {
   var fns = arguments;
@@ -21,24 +20,28 @@ function createArrow(count) {
     const height = 100;
     const x1 = (window.innerWidth / 2) - (width / 2);
     const y1 = window.innerHeight - height;
-    return { id, x1, y1, width, height };
+    const fillStyle = 'blue'
+    return { id, x1, y1, width, height, fillStyle };
+}
+
+function createCircle(count) {
+  const id = count;
+  const radius = getRandom(100);
+  const x = getRandomX(radius);
+  const y = getRandomY(radius);
+  const dx = getRandomArbitrary(-2, 2);
+  const dy = getRandomArbitrary(-2, 2);
+  const xRange = getXRange(radius);
+  const yRange = getYRange(radius);
+  return { id, radius, x, y, dx, dy, xRange, yRange };
 }
 
 function makeCircles(len) {
   const circles = [];
   let count = len;
   while (count--) {
-    const id = count;
-    const radius = getRandom(100);
-    const x = getRandomX(radius);
-    const y = getRandomY(radius);
-    const dx = getRandomArbitrary(-2, 2);
-    const dy = getRandomArbitrary(-2, 2);
-    const xRange = getXRange(radius);
-    const yRange = getYRange(radius);
-    circles.push({ id, radius, x, y, dx, dy, xRange, yRange });
+    circles.push(createCircle(count));
   }
-
   circles.push(createArrow(++len));
   return circles;
 }
@@ -135,21 +138,21 @@ function drawCircles(ctx, circles) {
   });
 }
 
-function isRange(value, range) {
+function isInRange(value, range) {
   return value ? (value >= range.min && value <= range.max) : false;
 }
 
 function applyFreeStyle({ circle, circles }) {
   const c = Object.assign({}, circle);
   if (c.dx) {
-    if (isRange(c.x + c.dx, c.xRange)) {
+    if (isInRange(c.x + c.dx, c.xRange)) {
       c.x += c.dx;
     } else {
       c.dx = -c.dx;
     }
   }
   if (c.dy) {
-    if (isRange(c.y + c.dy, c.yRange)) {
+    if (isInRange(c.y + c.dy, c.yRange)) {
       c.y += c.dy;
     } else {
       c.dy = -c.dy;
@@ -160,18 +163,28 @@ function applyFreeStyle({ circle, circles }) {
 
 function applyGravityStyle({ circle, circles }) {
   const c = Object.assign({}, circle);
-  if (!isRange(c.y + c.dy, c.yRange)) {
+
+  /*
+   * if (isInRange(c.x + c.dx, c.xRange)) {
+   *   c.x += c.dx;
+   * } else {
+   *   c.dx = -c.dx;
+   * }
+   */
+
+  if (!isInRange(c.y + c.dy, c.yRange)) {
     c.dy = -c.dy * friction;
   } else {
     c.dy += gravity;
   }
   c.y += c.dy;
+
   return { circle: c, circles };
 }
 
 function stopCircle({ circle, circles }) {
   const c = Object.assign({}, circle);
-  if (isRange(global.mouse.x, { min: c.x - c.radius, max: c.x + c.radius }) && isRange(global.mouse.y, { min: c.y - c.radius, max: c.y + c.radius})) {
+  if (isInRange(global.mouse.x, { min: c.x - c.radius, max: c.x + c.radius }) && isInRange(global.mouse.y, { min: c.y - c.radius, max: c.y + c.radius})) {
     c.fillStyle = 'rgb(100, 100, 200, 0.6)';
     c.dx = null;
     c.dy = null;
@@ -188,13 +201,13 @@ function stopCircle({ circle, circles }) {
 function moveArrow(key, circle) {
   const c = Object.assign({}, circle);
   if (key === DOWN) {
-    c.y1 += 1;
+    c.y1 += 3;
   } else if (key === UP) {
-    c.y1 -= 1;
+    c.y1 -= 3;
   } else if (key === RIGHT) {
-    c.x1 += 1;
+    c.x1 += 3;
   } else if (key === LEFT) {
-    c.x1 -= 1;
+    c.x1 -= 3;
   }
   return c;
 }
@@ -204,7 +217,7 @@ const freeStyle = compose(applyFreeStyle);
 
 function updateCircles(circles) {
   return circles.map(function(circle) {
-    const { circle: c } = gravityStyle({ circle, circles });
+    const { circle: c } = freeStyle({ circle, circles });
     return c;
   });
 }
@@ -219,7 +232,7 @@ function updateArrow(key, circles) {
   });
 }
 
-function checkOverlap(circles) {
+function checkOverlapArrowItem(circles, changeItem) {
   const arrow = circles.find(function (item) {
     return isArrow(item);
   });
@@ -227,7 +240,7 @@ function checkOverlap(circles) {
   if (arrow) {
     return circles.map(function(item) {
       if (isOverlap(arrow, item)) {
-        item.fillStyle = 'red';
+        return changeItem(item);
       }
       return item;
     });
@@ -241,6 +254,11 @@ const UP     = 38
 const RIGHT  = 39
 const DOWN   = 40
 
+function setRedColor(item) {
+  item.fillStyle = 'red';
+  return item;
+}
+
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
   function animate() {
@@ -250,7 +268,7 @@ function startAnimation(ctx) {
     circles = updateCircles(circles);
     drawArrow(ctx, circles);
     circles = updateArrow(global.key, circles);
-    circles = checkOverlap(circles);
+    circles = checkOverlapArrowItem(circles, setRedColor);
   }
   animate();
 }
