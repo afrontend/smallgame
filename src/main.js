@@ -1,6 +1,6 @@
 const CIRCLES = 9;
 const gravity = 1;
-const friction = 0.5;
+const friction = 0.7;
 
 function compose() {
   var fns = arguments;
@@ -93,19 +93,19 @@ function distance(x1, y1, x2, y2) {
   return Math.floor(Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)));
 }
 
-function isArrow(item) {
+function isCircle(item) {
   if (!item) return false;
-  const { x1, y1, width, height } = item;
-  if (x1 && y1 && width && height) {
+  const { x, y, radius } = item;
+  if (x && y && radius) {
     return true;
   }
   return false;
 }
 
-function isCircle(item) {
+function isArrow(item) {
   if (!item) return false;
-  const { x, y, radius } = item;
-  if (x && y && radius ) {
+  const { x1, y1, width, height } = item;
+  if (x1 && y1 && width && height) {
     return true;
   }
   return false;
@@ -134,7 +134,9 @@ function drawArrow(ctx, circles) {
 
 function drawCircles(ctx, circles) {
   circles.forEach(function(circle) {
-    drawCircle(ctx, circle)
+    if (isCircle(circle)) {
+      drawCircle(ctx, circle)
+    }
   });
 }
 
@@ -163,14 +165,6 @@ function applyFreeStyle({ circle, circles }) {
 
 function applyGravityStyle({ circle, circles }) {
   const c = Object.assign({}, circle);
-
-  /*
-   * if (isInRange(c.x + c.dx, c.xRange)) {
-   *   c.x += c.dx;
-   * } else {
-   *   c.dx = -c.dx;
-   * }
-   */
 
   if (!isInRange(c.y + c.dy, c.yRange)) {
     c.dy = -c.dy * friction;
@@ -215,10 +209,19 @@ function moveArrow(key, circle) {
 const gravityStyle = compose(applyGravityStyle);
 const freeStyle = compose(applyFreeStyle);
 
+function isRed(item) {
+  return item && item.fillStyle === 'red';
+}
+
 function updateCircles(circles) {
   return circles.map(function(circle) {
-    const { circle: c } = freeStyle({ circle, circles });
-    return c;
+    if (isRed(circle)) {
+      const { circle: c } = gravityStyle({ circle, circles });
+      return c;
+    } else {
+      const { circle: c } = freeStyle({ circle, circles });
+      return c;
+    }
   });
 }
 
@@ -244,9 +247,9 @@ function checkOverlapArrowItem(circles, changeItem) {
       }
       return item;
     });
-  } else {
-    return circles;
   }
+
+  return circles;
 }
 
 const LEFT   = 37
@@ -268,7 +271,7 @@ function startAnimation(ctx) {
     circles = updateCircles(circles);
     drawArrow(ctx, circles);
     circles = updateArrow(global.key, circles);
-    circles = checkOverlapArrowItem(circles, setRedColor);
+    circles = checkOverlapArrowItem(circles, function () {});
   }
   animate();
 }
@@ -302,4 +305,5 @@ function processMouseEvent(e) {
 
 window.addEventListener('load', activate);
 window.addEventListener('keyup', processKeyEvent, true);
+window.addEventListener('keydown', processKeyEvent, true);
 window.addEventListener('mousemove', processMouseEvent, true);
