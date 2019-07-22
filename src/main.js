@@ -1,6 +1,13 @@
-const CIRCLES = 9;
-const gravity = 0.1;
+const CIRCLES  = 9;
+const gravity  = 0.1;
 const friction = 0.7;
+const LEFT     = 37
+const UP       = 38
+const RIGHT    = 39
+const DOWN     = 40
+const global   = {};
+global.mouse   = {};
+global.key     = {};
 
 function clone(obj) {
   return Object.assign({}, obj);
@@ -17,6 +24,30 @@ function compose() {
     return result;
   };
 };
+
+function getXRange(min) {
+  return { min: min, max: window.innerWidth - min };
+}
+
+function getYRange(min) {
+  return { min: min, max: window.innerHeight - min };
+}
+
+function getRandomArbitrary(min, max) {
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+function getRandomX(min) {
+  return getRandomArbitrary(min, window.innerWidth - min);
+}
+
+function getRandomY(min) {
+  return getRandomArbitrary(min, window.innerHeight - min);
+}
+
+function getRandom(max) {
+  return Math.floor(Math.random() * max);
+}
 
 function createCircle(count) {
   const id = count;
@@ -39,20 +70,38 @@ function isCircle(item) {
   return false;
 }
 
-function createPerson(count) {
+function createPerson(count = 0) {
   const id = count;
   const width = 20;
   const height = 100;
-  const x1 = (window.innerWidth / 2) - (width / 2);
-  const y1 = window.innerHeight - height;
+  const x = (window.innerWidth / 2) - (width / 2);
+  const y = window.innerHeight - height;
   const fillStyle = 'blue'
-  return { id, x1, y1, width, height, fillStyle };
+  return { id, x, y, width, height, fillStyle };
 }
 
 function isPerson(item) {
   if (!item) return false;
-  const { x1, y1, width, height } = item;
-  if (x1 && y1 && width && height) {
+  const { x, y, width, height, fillStyle } = item;
+  if (x && y && width && height && fillStyle === 'blue') {
+    return true;
+  }
+  return false;
+}
+
+function createRope(person) {
+  const rope = createPerson();
+  rope.x = person.x;
+  rope.y = person.y;
+  rope.yRange = getYRange(100);
+  rope.fillStyle = 'yellow';
+  return rope;
+}
+
+function isRope(item) {
+  if (!item) return false;
+  const { x, y, width, height, fillStyle } = item;
+  if (x && y && width, height, fillStyle === 'yellow') {
     return true;
   }
   return false;
@@ -66,30 +115,6 @@ function makeCircles(len) {
   }
   circles.push(createPerson(++len));
   return circles;
-}
-
-function getXRange(min) {
-  return { min: min, max: window.innerWidth - min };
-}
-
-function getYRange(min) {
-  return { min: min, max: window.innerHeight - min };
-}
-
-function getRandomX(min) {
-  return getRandomArbitrary(min, window.innerWidth - min);
-}
-
-function getRandomY(min) {
-  return getRandomArbitrary(min, window.innerHeight - min);
-}
-
-function getRandom(max) {
-  return Math.floor(Math.random() * max);
-}
-
-function getRandomArbitrary(min, max) {
-  return Math.floor(Math.random() * (max - min) + min);
 }
 
 function clearScreen(ctx) {
@@ -123,7 +148,16 @@ function drawPerson(ctx, circles) {
   circles.forEach(function(item) {
     if(isPerson(item)) {
       ctx.fillStyle = item.fillStyle;
-      ctx.fillRect(item.x1, item.y1, item.width, item.height);
+      ctx.fillRect(item.x, item.y, item.width, item.height);
+    }
+  });
+}
+
+function drawRope(ctx, circles) {
+  circles.forEach(function(item) {
+    if(isRope(item)) {
+      ctx.fillStyle = item.fillStyle;
+      ctx.fillRect(item.x, item.y, item.width, item.height);
     }
   });
 }
@@ -132,11 +166,11 @@ function distance(x1, y1, x2, y2) {
   return Math.floor(Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)));
 }
 
-function isOverlap(arrow, circle) {
-  if (distance(arrow.x1, arrow.y1, circle.x, circle.y) <= circle.radius ||
-    distance(arrow.x1 + arrow.width, arrow.y1, circle.x, circle.y) <= circle.radius ||
-    distance(arrow.x1, arrow.y1 + arrow.height, circle.x, circle.y) <= circle.radius ||
-    distance(arrow.x1 + arrow.width, arrow.y1 + arrow.height, circle.x, circle.y) <= circle.radius
+function isOverlap(person, circle) {
+  if (distance(person.x, person.y, circle.x, circle.y) <= circle.radius ||
+    distance(person.x + person.width, person.y, circle.x, circle.y) <= circle.radius ||
+    distance(person.x, person.y + person.height, circle.x, circle.y) <= circle.radius ||
+    distance(person.x + person.width, person.y + person.height, circle.x, circle.y) <= circle.radius
   ) {
     return true;
   } else {
@@ -196,18 +230,21 @@ function stopCircle({ circle, circles }) {
   return { circle: c, circles };
 }
 
-function movePerson(key, circle) {
-  const c = clone(circle);
-  if (key === DOWN) {
-    c.y1 += 3;
-  } else if (key === UP) {
-    c.y1 -= 3;
-  } else if (key === RIGHT) {
-    c.x1 += 3;
+function movePerson(key, person) {
+  const p = clone(person);
+  if (key === RIGHT) {
+    p.x += 3;
   } else if (key === LEFT) {
-    c.x1 -= 3;
+    p.x -= 3;
   }
-  return c;
+  return p;
+}
+
+function moveRope(rope) {
+  const r = clone(rope);
+    r.y -= 10;
+    r.height += 10;
+  return r;
 }
 
 const gravityStyle = compose(applyGravityStyle);
@@ -229,24 +266,48 @@ function updateCircles(circles) {
   });
 }
 
+function findPerson(circles) {
+  return circles.find(function (item) {
+    return isPerson(item);
+  });
+}
+
 function updatePerson(key, circles) {
   if (!key) return circles;
-  return circles.map(function(item) {
+  const newCircles =  circles.map(function(item) {
     if (isPerson(item)) {
       return movePerson(key, item);
+    }
+    return item;
+  });
+
+  if (key === UP) {
+    const p = findPerson(newCircles);
+    if (p) {
+      newCircles.push(createRope(p));
+    }
+  }
+
+  return newCircles;
+}
+
+function updateRope(circles) {
+  return circles.map(function(item) {
+    if (isRope(item)) {
+      return isInRange(item.y, item.yRange) ? moveRope(item) : {};
     }
     return item;
   });
 }
 
 function checkOverlapPersonItem(circles, changeItem) {
-  const arrow = circles.find(function (item) {
+  const person = circles.find(function (item) {
     return isPerson(item);
   });
 
-  if (arrow) {
+  if (person) {
     return circles.map(function(item) {
-      if (isOverlap(arrow, item)) {
+      if (isOverlap(person, item)) {
         return changeItem(item);
       }
       return item;
@@ -255,11 +316,6 @@ function checkOverlapPersonItem(circles, changeItem) {
 
   return circles;
 }
-
-const LEFT   = 37
-const UP     = 38
-const RIGHT  = 39
-const DOWN   = 40
 
 function setRedColor(item) {
   item.fillStyle = 'red';
@@ -270,12 +326,14 @@ function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
   function animate() {
     requestAnimationFrame(animate);
+    circles = updateCircles(circles);
+    circles = updatePerson(global.key, circles);
+    circles = updateRope(circles);
+    circles = checkOverlapPersonItem(circles, setRedColor);
     clearScreen(ctx);
     drawCircles(ctx, circles);
-    circles = updateCircles(circles);
     drawPerson(ctx, circles);
-    circles = updatePerson(global.key, circles);
-    circles = checkOverlapPersonItem(circles, setRedColor);
+    drawRope(ctx, circles);
   }
   animate();
 }
@@ -291,10 +349,6 @@ function activate() {
   const ctx = c.getContext("2d");
   startAnimation(ctx);
 }
-
-const global = {};
-global.mouse = {};
-global.key = {};
 
 function processKeyEvent(e) {
   const letterPressed = String.fromCharCode(e.keyCode)
