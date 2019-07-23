@@ -1,4 +1,4 @@
-const CIRCLES  = 9;
+const CIRCLES  = 99;
 const gravity  = 0.1;
 const friction = 0.7;
 const LEFT     = 37
@@ -178,6 +178,10 @@ function isOverlap(person, circle) {
   }
 }
 
+function isSomeOverlap(ropes, circle) {
+  return ropes.some(rope => isOverlap(rope, circle));
+}
+
 function isInRange(value, range) {
   return value ? (value >= range.min && value <= range.max) : false;
 }
@@ -230,11 +234,13 @@ function stopCircle({ circle, circles }) {
   return { circle: c, circles };
 }
 
-function movePerson(key, person) {
+function movePerson(person) {
   const p = clone(person);
-  if (key === RIGHT) {
+  if (global.key === RIGHT) {
+    global.key = null;
     p.x += 3;
-  } else if (key === LEFT) {
+  } else if (global.key === LEFT) {
+    global.key = null;
     p.x -= 3;
   }
   return p;
@@ -267,28 +273,24 @@ function updateCircles(circles) {
 }
 
 function findPerson(circles) {
-  return circles.find(function (item) {
+  return circles.find(item => {
     return isPerson(item);
   });
 }
 
-function updatePerson(key, circles) {
-  if (!key) return circles;
-  const newCircles =  circles.map(function(item) {
-    if (isPerson(item)) {
-      return movePerson(key, item);
-    }
-    return item;
-  });
+function updatePerson(circles) {
+  return circles.map(item => isPerson(item) ? movePerson(item) : item );
+}
 
-  if (key === UP) {
-    const p = findPerson(newCircles);
+function addRope(circles) {
+  if (global.key === UP) {
+    global.key = null;
+    const p = findPerson(circles);
     if (p) {
-      newCircles.push(createRope(p));
+      circles.push(createRope(p));
     }
   }
-
-  return newCircles;
+  return circles;
 }
 
 function updateRope(circles) {
@@ -301,19 +303,22 @@ function updateRope(circles) {
 }
 
 function checkOverlapPersonItem(circles, changeItem) {
-  const person = circles.find(function (item) {
-    return isPerson(item);
-  });
-
-  if (person) {
+  const p = circles.find(item => isPerson(item));
+  if (p) {
     return circles.map(function(item) {
-      if (isOverlap(person, item)) {
-        return changeItem(item);
-      }
-      return item;
+      return isOverlap(p, item) ? changeItem(item) : item;
     });
   }
+  return circles;
+}
 
+function checkCollisionItem(circles, changeItem) {
+  const ropes = circles.filter(item => isRope(item));
+  if (Array.isArray(ropes) && ropes.length > 0) {
+    return circles.map(item => {
+      return isSomeOverlap(ropes, item) ? changeItem(item) : item;
+    });
+  }
   return circles;
 }
 
@@ -327,9 +332,11 @@ function startAnimation(ctx) {
   function animate() {
     requestAnimationFrame(animate);
     circles = updateCircles(circles);
-    circles = updatePerson(global.key, circles);
+    circles = updatePerson(circles);
+    circles = addRope(circles);
     circles = updateRope(circles);
     circles = checkOverlapPersonItem(circles, setRedColor);
+    circles = checkCollisionItem(circles, setRedColor);
     clearScreen(ctx);
     drawCircles(ctx, circles);
     drawPerson(ctx, circles);
