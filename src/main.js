@@ -7,7 +7,8 @@ const RIGHT    = 39
 const DOWN     = 40
 const global   = {};
 global.mouse   = {};
-global.key     = {};
+global.key     = null;
+global.Prevkey = null;
 
 function clone(obj) {
   return Object.assign({}, obj);
@@ -77,7 +78,8 @@ function createPerson(count = 0) {
   const x = (window.innerWidth / 2) - (width / 2);
   const y = window.innerHeight - height;
   const fillStyle = 'blue'
-  return { id, x, y, width, height, fillStyle };
+  const xRange = getXRange(0);
+  return { id, x, y, width, height, fillStyle, xRange };
 }
 
 function isPerson(item) {
@@ -237,11 +239,13 @@ function stopCircle({ circle, circles }) {
 function movePerson(person) {
   const p = clone(person);
   if (global.key === RIGHT) {
-    global.key = null;
-    p.x += 3;
+    if (isInRange(p.x + 3, p.xRange)) {
+      p.x += 3;
+    }
   } else if (global.key === LEFT) {
-    global.key = null;
-    p.x -= 3;
+    if (isInRange(p.x - 3, p.xRange)) {
+      p.x -= 3;
+    }
   }
   return p;
 }
@@ -284,10 +288,12 @@ function updatePerson(circles) {
 
 function addRope(circles) {
   if (global.key === UP) {
-    global.key = null;
     const p = findPerson(circles);
     if (p) {
       circles.push(createRope(p));
+    }
+    if (global.prevKey === LEFT || global.prevKey === RIGHT) {
+      global.key = global.prevKey;
     }
   }
   return circles;
@@ -358,9 +364,10 @@ function activate() {
 }
 
 function processKeyEvent(e) {
-  const letterPressed = String.fromCharCode(e.keyCode)
+  global.prevKey = global.key;
   global.key = e.keyCode;
-  console.log(e.keyCode, letterPressed.toLowerCase());
+  const letterPressed = String.fromCharCode(global.key)
+  console.log(global.key, letterPressed.toLowerCase());
 }
 
 function processMouseEvent(e) {
