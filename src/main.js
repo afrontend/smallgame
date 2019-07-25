@@ -8,7 +8,7 @@ const DOWN     = 40
 const global   = {};
 global.mouse   = {};
 global.key     = null;
-global.Prevkey = null;
+global.prevkey = null;
 
 function clone(obj) {
   return Object.assign({}, obj);
@@ -341,7 +341,7 @@ function startAnimation(ctx) {
     circles = updatePerson(circles);
     circles = addRope(circles);
     circles = updateRope(circles);
-    circles = checkOverlapPersonItem(circles, setRedColor);
+    circles = checkOverlapPersonItem(circles, () => ({}));
     circles = checkCollisionItem(circles, setRedColor);
     clearScreen(ctx);
     drawCircles(ctx, circles);
@@ -349,18 +349,6 @@ function startAnimation(ctx) {
     drawRope(ctx, circles);
   }
   animate();
-}
-
-function activate() {
-  const c = document.querySelector("canvas");
-  c.width = window.innerWidth;
-  c.height = window.innerHeight;
-  setTimeout(function() {
-    console.log(window.innerWidth, window.innerHeight);
-    console.log(c.width, c.height);
-  }, 1000);
-  const ctx = c.getContext("2d");
-  startAnimation(ctx);
 }
 
 function processKeyEvent(e) {
@@ -373,6 +361,14 @@ function processKeyEvent(e) {
 function processMouseEvent(e) {
   global.mouse = {x: e.x, y: e.y};
   console.log(global.mouse);
+}
+
+function activate() {
+  const c = document.querySelector("canvas");
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+  const ctx = c.getContext("2d");
+  startAnimation(ctx);
 }
 
 window.addEventListener('load', activate);
