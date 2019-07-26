@@ -333,16 +333,27 @@ function setRedColor(item) {
   return item;
 }
 
+const checkPerson = circles => {
+  return checkOverlapPersonItem(circles, () => ({}));
+};
+
+const checkCollision = (circles) => {
+  return checkCollisionItem(circles, setRedColor);
+}
+
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
+  const update = compose(
+    updateCircles,
+    updatePerson,
+    addRope,
+    updateRope,
+    checkPerson,
+    checkCollision
+  );
   function animate() {
     requestAnimationFrame(animate);
-    circles = updateCircles(circles);
-    circles = updatePerson(circles);
-    circles = addRope(circles);
-    circles = updateRope(circles);
-    circles = checkOverlapPersonItem(circles, () => ({}));
-    circles = checkCollisionItem(circles, setRedColor);
+    circles = update(circles);
     clearScreen(ctx);
     drawCircles(ctx, circles);
     drawPerson(ctx, circles);
