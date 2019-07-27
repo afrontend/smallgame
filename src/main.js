@@ -138,30 +138,39 @@ function drawCircle(ctx, circle) {
   ctx.fill();
 }
 
-function drawCircles(ctx, circles) {
-  circles.forEach(function(circle) {
-    if (isCircle(circle)) {
-      drawCircle(ctx, circle)
-    }
-  });
+const drawCircles = ctx => {
+  return circles => {
+    circles.forEach(function(circle) {
+      if (isCircle(circle)) {
+        drawCircle(ctx, circle)
+      }
+    });
+    return circles;
+  }
 }
 
-function drawPerson(ctx, circles) {
-  circles.forEach(function(item) {
-    if(isPerson(item)) {
-      ctx.fillStyle = item.fillStyle;
-      ctx.fillRect(item.x, item.y, item.width, item.height);
-    }
-  });
+const drawPerson = ctx => {
+  return circles => {
+    circles.forEach(function(item) {
+      if(isPerson(item)) {
+        ctx.fillStyle = item.fillStyle;
+        ctx.fillRect(item.x, item.y, item.width, item.height);
+      }
+    });
+    return circles;
+  }
 }
 
-function drawRope(ctx, circles) {
-  circles.forEach(function(item) {
-    if(isRope(item)) {
-      ctx.fillStyle = item.fillStyle;
-      ctx.fillRect(item.x, item.y, item.width, item.height);
-    }
-  });
+const drawRope = ctx => {
+  return circles => {
+    circles.forEach(function(item) {
+      if(isRope(item)) {
+        ctx.fillStyle = item.fillStyle;
+        ctx.fillRect(item.x, item.y, item.width, item.height);
+      }
+    });
+    return circles;
+  }
 }
 
 function distance(x1, y1, x2, y2) {
@@ -351,13 +360,16 @@ function startAnimation(ctx) {
     checkPerson,
     checkCollision
   );
+  const draw = compose(
+    drawCircles(ctx),
+    drawPerson(ctx),
+    drawRope(ctx)
+  );
   function animate() {
     requestAnimationFrame(animate);
     circles = update(circles);
     clearScreen(ctx);
-    drawCircles(ctx, circles);
-    drawPerson(ctx, circles);
-    drawRope(ctx, circles);
+    circles = draw(circles);
   }
   animate();
 }
