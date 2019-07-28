@@ -8,7 +8,7 @@ const DOWN     = 40
 const global   = {};
 global.mouse   = {};
 global.key     = null;
-global.prevkey = null;
+global.prevKey = null;
 
 function clone(obj) {
   return Object.assign({}, obj);
@@ -74,7 +74,7 @@ function isCircle(item) {
 function createPerson(count = 0) {
   const id = count;
   const width = 20;
-  const height = 100;
+  const height = 50;
   const x = (window.innerWidth / 2) - (width / 2);
   const y = window.innerHeight - height;
   const fillStyle = 'blue'
@@ -95,7 +95,7 @@ function createRope(person) {
   const rope = createPerson();
   rope.x = person.x;
   rope.y = person.y;
-  rope.yRange = getYRange(100);
+  rope.yRange = getYRange(0);
   rope.fillStyle = 'yellow';
   return rope;
 }
@@ -262,7 +262,6 @@ function movePerson(person) {
 function moveRope(rope) {
   const r = clone(rope);
     r.y -= 10;
-    r.height += 10;
   return r;
 }
 
