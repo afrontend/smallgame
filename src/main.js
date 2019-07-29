@@ -336,17 +336,32 @@ function checkCollisionItem(circles, changeItem) {
   return circles;
 }
 
-function setRedColor(item) {
-  item.fillStyle = 'red';
-  return item;
+const changeColor = color => item => {
+  const newItem = clone(item);
+  newItem.fillStyle = color;
+  return newItem;
 }
+
+const changeRadius = limit => fn => item => {
+  const newItem = clone(item);
+  if (newItem.radius > limit) {
+    newItem.radius = fn(newItem.radius);
+  }
+  return newItem;
+}
+
+const changeHalfSize = changeRadius(10)(x => x / 2);
 
 const checkPerson = circles => {
   return checkOverlapPersonItem(circles, () => ({}));
 };
 
 const checkCollision = (circles) => {
-  return checkCollisionItem(circles, setRedColor);
+  return checkCollisionItem(circles, changeColor('red'));
+}
+
+const halfSize = (circles) => {
+  return checkCollisionItem(circles, changeHalfSize);
 }
 
 function startAnimation(ctx) {
@@ -357,7 +372,8 @@ function startAnimation(ctx) {
     addRope,
     updateRope,
     checkPerson,
-    checkCollision
+    checkCollision,
+    halfSize
   );
   const draw = compose(
     drawCircles(ctx),
