@@ -364,6 +364,28 @@ const halfSize = (circles) => {
   return checkCollisionItem(circles, changeHalfSize);
 }
 
+const cloneCircle = (circles) => {
+  let addedCircles = [];
+  let newCircles = checkCollisionItem(circles, (item) => {
+    if (item.fillStyle !== 'red') {
+      const leftCircle = clone(item);
+      leftCircle.x -= leftCircle.radius*2;
+      leftCircle.y -= leftCircle.radius*2;
+      leftCircle.fillStyle = 'red';
+      addedCircles.push(leftCircle);
+      const rightCircle = clone(item);
+      rightCircle.x += rightCircle.radius*2;
+      rightCircle.y -= rightCircle.radius*2;
+      rightCircle.fillStyle = 'red';
+      addedCircles.push(rightCircle);
+      return {};
+    } else {
+      return item;
+    }
+  });
+  return newCircles.concat(addedCircles);
+}
+
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
   const update = compose(
@@ -373,7 +395,7 @@ function startAnimation(ctx) {
     updateRope,
     checkPerson,
     checkCollision,
-    halfSize
+    cloneCircle
   );
   const draw = compose(
     drawCircles(ctx),
