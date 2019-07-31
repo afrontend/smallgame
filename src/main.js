@@ -52,7 +52,7 @@ function getRandom(max) {
 
 function createCircle(count) {
   const id = count;
-  const radius = getRandom(100);
+  const radius = getRandomArbitrary(50, 100);
   const x = getRandomX(radius);
   const y = getRandomY(radius);
   const dx = getRandomArbitrary(-2, 2);
@@ -386,6 +386,47 @@ const cloneCircle = (circles) => {
   return newCircles.concat(addedCircles);
 }
 
+function isBottom(item) {
+  if ((item.y + item.radius) >= window.innerHeight) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function isTop(item) {
+  if (item.y <= item.radius) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function countDown(item) {
+  if (!item) return item;
+  const newItem = clone(item);
+  if (newItem.timeoutCount === undefined) {
+    newItem.timeoutCount = 100;
+  }
+  newItem.timeoutCount--;
+  console.log(newItem.timeoutCount);
+  return newItem.timeoutCount === 0 ? {} : newItem;
+}
+
+function checkItemOnTheBottom(circles, changeItem) {
+  return circles.map(item => {
+    if (isCircle(item) && isRed(item)) {
+      return (isBottom(item) || isTop(item)) ? countDown(item) : item;
+    } else {
+      return item;
+    }
+  });
+}
+
+const checkTimeout = (circles) => {
+  return checkItemOnTheBottom(circles);
+}
+
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
   const update = compose(
@@ -395,7 +436,8 @@ function startAnimation(ctx) {
     updateRope,
     checkPerson,
     checkCollision,
-    cloneCircle
+    cloneCircle,
+    checkTimeout
   );
   const draw = compose(
     drawCircles(ctx),
