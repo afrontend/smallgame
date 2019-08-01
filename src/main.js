@@ -97,6 +97,7 @@ function createRope(person) {
   rope.y = person.y;
   rope.yRange = getYRange(0);
   rope.fillStyle = 'yellow';
+  rope.id = persion.id ? person.id : 0;
   return rope;
 }
 
@@ -298,6 +299,7 @@ function addRope(circles) {
   if (global.key === UP) {
     const p = findPerson(circles);
     if (p) {
+      p.id = circles.length;
       circles.push(createRope(p));
     }
     if (global.prevKey === LEFT || global.prevKey === RIGHT) {
