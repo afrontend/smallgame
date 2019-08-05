@@ -1,6 +1,6 @@
 const CIRCLES  = 99;
-const gravity  = 0.1;
-const friction = 0.7;
+const GRAVITY  = 0.1;
+const FRICTION = 0.7;
 const LEFT     = 37
 const UP       = 38
 const RIGHT    = 39
@@ -97,7 +97,7 @@ function createRope(person) {
   rope.y = person.y;
   rope.yRange = getYRange(0);
   rope.fillStyle = 'yellow';
-  rope.id = persion.id ? person.id : 0;
+  rope.id = person.id ? person.id : 0;
   return rope;
 }
 
@@ -198,7 +198,7 @@ function isInRange(value, range) {
   return value ? (value >= range.min && value <= range.max) : false;
 }
 
-function applyFreeStyle({ circle, circles }) {
+function applyMoveFreely({ circle, circles }) {
   const c = clone(circle);
   if (c.dx) {
     if (isInRange(c.x + c.dx, c.xRange)) {
@@ -217,13 +217,13 @@ function applyFreeStyle({ circle, circles }) {
   return { circle: c, circles };
 }
 
-function applyGravityStyle({ circle, circles }) {
+function applyGravity({ circle, circles }) {
   const c = clone(circle);
 
   if (!isInRange(c.y + c.dy, c.yRange)) {
-    c.dy = -c.dy * friction;
+    c.dy = -c.dy * FRICTION;
   } else {
-    c.dy += gravity;
+    c.dy += GRAVITY;
   }
   c.y += c.dy;
 
@@ -266,24 +266,26 @@ function moveRope(rope) {
   return r;
 }
 
-const gravityStyle = compose(applyGravityStyle);
-const freeStyle = compose(applyFreeStyle);
-
 function isRed(item) {
   return item && item.fillStyle === 'red';
 }
 
-function updateCircles(circles) {
+const applyStyle = filter => styleCb => circles => {
   return circles.map(function(circle) {
-    if (isRed(circle)) {
-      const { circle: c } = gravityStyle({ circle, circles });
-      return c;
-    } else {
-      const { circle: c } = freeStyle({ circle, circles });
+    if (filter(circle)) {
+      const { circle: c } = styleCb({ circle, circles });
       return c;
     }
+    return circle;
   });
 }
+
+const not = f => {
+  return (...args) => !f.apply(null, args);
+}
+
+const gravity = applyStyle(isRed)(applyGravity);
+const moveFreely = applyStyle(not(isRed))(applyMoveFreely);
 
 function findPerson(circles) {
   return circles.find(item => {
@@ -425,14 +427,13 @@ function checkItemOnTheBottom(circles, changeItem) {
   });
 }
 
-const checkTimeout = (circles) => {
-  return checkItemOnTheBottom(circles);
-}
+const checkTimeout = circles => checkItemOnTheBottom(circles);
 
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
   const update = compose(
-    updateCircles,
+    gravity,
+    moveFreely,
     updatePerson,
     addRope,
     updateRope,
