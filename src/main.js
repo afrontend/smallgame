@@ -198,7 +198,7 @@ function isInRange(value, range) {
   return value ? (value >= range.min && value <= range.max) : false;
 }
 
-function applyMoveFreely({ circle, circles }) {
+function applyMoveFreely(circle) {
   const c = clone(circle);
   if (c.dx) {
     if (isInRange(c.x + c.dx, c.xRange)) {
@@ -214,20 +214,18 @@ function applyMoveFreely({ circle, circles }) {
       c.dy = -c.dy;
     }
   }
-  return { circle: c, circles };
+  return c;
 }
 
-function applyGravity({ circle, circles }) {
+function applyGravity(circle) {
   const c = clone(circle);
-
   if (!isInRange(c.y + c.dy, c.yRange)) {
     c.dy = -c.dy * FRICTION;
   } else {
     c.dy += GRAVITY;
   }
   c.y += c.dy;
-
-  return { circle: c, circles };
+  return c;
 }
 
 function stopCircle({ circle, circles }) {
@@ -271,13 +269,9 @@ function isRed(item) {
 }
 
 const applyStyle = filter => styleCb => circles => {
-  return circles.map(function(circle) {
-    if (filter(circle)) {
-      const { circle: c } = styleCb({ circle, circles });
-      return c;
-    }
-    return circle;
-  });
+  return circles.map(circle =>
+    filter(circle) ? styleCb(circle) : circle
+  );
 }
 
 const not = f => {
@@ -286,15 +280,12 @@ const not = f => {
 
 const gravity = applyStyle(isRed)(applyGravity);
 const moveFreely = applyStyle(not(isRed))(applyMoveFreely);
+const updatePerson = applyStyle(isPerson)(movePerson);
 
 function findPerson(circles) {
   return circles.find(item => {
     return isPerson(item);
   });
-}
-
-function updatePerson(circles) {
-  return circles.map(item => isPerson(item) ? movePerson(item) : item );
 }
 
 function addRope(circles) {
