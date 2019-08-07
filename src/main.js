@@ -268,6 +268,10 @@ function isRed(item) {
   return item && item.fillStyle === 'red';
 }
 
+const checkRope = rope => (
+  isInRange(rope.y, rope.yRange) ? moveRope(rope) : {}
+);
+
 const applyStyle = filter => styleCb => circles => {
   return circles.map(circle =>
     filter(circle) ? styleCb(circle) : circle
@@ -281,6 +285,7 @@ const not = f => {
 const gravity = applyStyle(isRed)(applyGravity);
 const moveFreely = applyStyle(not(isRed))(applyMoveFreely);
 const updatePerson = applyStyle(isPerson)(movePerson);
+const updateRope = applyStyle(isRope)(checkRope);
 
 function findPerson(circles) {
   return circles.find(item => {
@@ -300,15 +305,6 @@ function addRope(circles) {
     }
   }
   return circles;
-}
-
-function updateRope(circles) {
-  return circles.map(function(item) {
-    if (isRope(item)) {
-      return isInRange(item.y, item.yRange) ? moveRope(item) : {};
-    }
-    return item;
-  });
 }
 
 function checkOverlapPersonItem(circles, changeItem) {
