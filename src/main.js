@@ -198,7 +198,12 @@ function isInRange(value, range) {
   return value ? (value >= range.min && value <= range.max) : false;
 }
 
-function applyMoveFreely(circle) {
+const applyMoveFreely = compose(
+  applyMoveLeftOrRight,
+  applyMoveUpOrDown
+)
+
+function applyMoveLeftOrRight(circle) {
   const c = clone(circle);
   if (c.dx) {
     if (isInRange(c.x + c.dx, c.xRange)) {
@@ -207,6 +212,11 @@ function applyMoveFreely(circle) {
       c.dx = -c.dx;
     }
   }
+  return c;
+}
+
+function applyMoveUpOrDown(circle) {
+  const c = clone(circle);
   if (c.dy) {
     if (isInRange(c.y + c.dy, c.yRange)) {
       c.y += c.dy;
