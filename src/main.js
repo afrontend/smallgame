@@ -201,7 +201,7 @@ function isInRange(value, range) {
 const applyMoveFreely = compose(
   applyMoveLeftOrRight,
   applyMoveUpOrDown
-)
+);
 
 function applyMoveLeftOrRight(circle) {
   const c = clone(circle);
@@ -238,7 +238,7 @@ function applyGravity(circle) {
   return c;
 }
 
-function stopCircle({ circle, circles }) {
+function stopCircle(circle) {
   const c = clone(circle);
   if (isInRange(global.mouse.x, { min: c.x - c.radius, max: c.x + c.radius }) && isInRange(global.mouse.y, { min: c.y - c.radius, max: c.y + c.radius})) {
     c.fillStyle = 'rgb(100, 100, 200, 0.6)';
@@ -251,7 +251,7 @@ function stopCircle({ circle, circles }) {
       c.dy = getRandomArbitrary(-1, 1);
     }
   }
-  return { circle: c, circles };
+  return c;
 }
 
 function movePerson(person) {
@@ -414,17 +414,10 @@ function countDown(item) {
   return newItem.timeoutCount === 0 ? {} : newItem;
 }
 
-function checkItemOnTheBottom(circles, changeItem) {
-  return circles.map(item => {
-    if (isCircle(item) && isRed(item)) {
-      return (isBottom(item) || isTop(item)) ? countDown(item) : item;
-    } else {
-      return item;
-    }
-  });
-}
-
-const checkTimeout = circles => checkItemOnTheBottom(circles);
+const isCircleAndRed = item => (isCircle(item) && isRed(item));
+const checkTopOrBottom = item => (isBottom(item) || isTop(item)) ? countDown(item) : item;
+const checkItemOnTheBottom = applyStyle(isCircleAndRed)(checkTopOrBottom);
+const checkTimeout = checkItemOnTheBottom;
 
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
