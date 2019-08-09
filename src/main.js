@@ -1,10 +1,10 @@
 const CIRCLES  = 99;
 const GRAVITY  = 0.1;
 const FRICTION = 0.7;
-const LEFT     = 37
-const UP       = 38
-const RIGHT    = 39
-const DOWN     = 40
+const LEFT     = 37;
+const UP       = 38;
+const RIGHT    = 39;
+const DOWN     = 40;
 const global   = {};
 global.mouse   = {};
 global.key     = null;
@@ -95,6 +95,7 @@ function createRope(person) {
   const rope = createPerson();
   rope.x = person.x;
   rope.y = person.y;
+  rope.height = person.height / 2;
   rope.yRange = getYRange(0);
   rope.fillStyle = 'yellow';
   rope.id = person.id ? person.id : 0;
@@ -293,6 +294,7 @@ const not = f => {
 }
 
 const gravity = applyStyle(isRed)(applyGravity);
+const moveLeftOrRight = applyStyle(isRed)(applyMoveLeftOrRight);
 const moveFreely = applyStyle(not(isRed))(applyMoveFreely);
 const updatePerson = applyStyle(isPerson)(movePerson);
 const updateRope = applyStyle(isRope)(checkRope);
@@ -371,11 +373,13 @@ const cloneCircle = (circles) => {
     if (item.fillStyle !== 'red') {
       const leftCircle = clone(item);
       leftCircle.x -= leftCircle.radius*2;
+      leftCircle.dx = item.dx > 0 ? -leftCircle.dx : leftCircle.dx;
       leftCircle.y -= leftCircle.radius*2;
       leftCircle.fillStyle = 'red';
       addedCircles.push(leftCircle);
       const rightCircle = clone(item);
       rightCircle.x += rightCircle.radius*2;
+      rightCircle.dx = item.dx > 0 ? rightCircle.dx : -rightCircle.dx;
       rightCircle.y -= rightCircle.radius*2;
       rightCircle.fillStyle = 'red';
       addedCircles.push(rightCircle);
@@ -422,6 +426,7 @@ const checkTimeout = checkItemOnTheBottom;
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
   const update = compose(
+    moveLeftOrRight,
     gravity,
     moveFreely,
     updatePerson,
