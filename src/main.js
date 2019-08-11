@@ -50,13 +50,18 @@ function getRandom(max) {
   return Math.floor(Math.random() * max);
 }
 
+function getRadians(angle) {
+  return angle * Math.PI/180;
+}
+
 function createCircle(count) {
   const id = count;
-  const radius = getRandomArbitrary(50, 100);
+  const radius = getRandomArbitrary(5, 100);
   const x = getRandomX(radius);
   const y = getRandomY(radius);
-  const dx = getRandomArbitrary(-2, 2);
-  const dy = getRandomArbitrary(-2, 2);
+  const angle = getRandom(360);
+  const dx = Math.cos(getRadians(angle)) * Math.abs(radius-100)/2;
+  const dy = Math.sin(getRadians(angle)) * Math.abs(radius-100)/2;
   const xRange = getXRange(radius);
   const yRange = getYRange(radius);
   return { id, radius, x, y, dx, dy, xRange, yRange };
@@ -236,22 +241,6 @@ function applyGravity(circle) {
     c.dy += GRAVITY;
   }
   c.y += c.dy;
-  return c;
-}
-
-function stopCircle(circle) {
-  const c = clone(circle);
-  if (isInRange(global.mouse.x, { min: c.x - c.radius, max: c.x + c.radius }) && isInRange(global.mouse.y, { min: c.y - c.radius, max: c.y + c.radius})) {
-    c.fillStyle = 'rgb(100, 100, 200, 0.6)';
-    c.dx = null;
-    c.dy = null;
-  } else {
-    c.fillStyle = null;
-    if (!c.dx) {
-      c.dx = getRandomArbitrary(-1, 1);
-      c.dy = getRandomArbitrary(-1, 1);
-    }
-  }
   return c;
 }
 
