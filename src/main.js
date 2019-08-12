@@ -54,17 +54,22 @@ function getRadians(angle) {
   return angle * Math.PI/180;
 }
 
+function getDxDy(angle, speed) {
+  const dx = Math.cos(getRadians(angle)) * speed;
+  const dy = Math.sin(getRadians(angle)) * speed;
+  return { dx, dy };
+}
+
 function createCircle(count) {
   const id = count;
   const radius = getRandomArbitrary(5, 100);
   const x = getRandomX(radius);
   const y = getRandomY(radius);
   const angle = getRandom(360);
-  const dx = Math.cos(getRadians(angle)) * Math.abs(radius-100)/2;
-  const dy = Math.sin(getRadians(angle)) * Math.abs(radius-100)/2;
+  const { dx, dy } = getDxDy(angle, Math.abs(radius-100)/4);
   const xRange = getXRange(radius);
   const yRange = getYRange(radius);
-  return { id, radius, x, y, dx, dy, xRange, yRange };
+  return { id, radius, x, y, angle, dx, dy, xRange, yRange };
 }
 
 function isCircle(item) {
