@@ -66,10 +66,11 @@ function createCircle(count) {
   const x = getRandomX(radius);
   const y = getRandomY(radius);
   const angle = getRandom(360);
-  const { dx, dy } = getDxDy(angle, Math.abs(radius-100)/4);
+  const speed = Math.abs(radius-100)/4;
+  const { dx, dy } = getDxDy(angle, speed);
   const xRange = getXRange(radius);
   const yRange = getYRange(radius);
-  return { id, radius, x, y, angle, dx, dy, xRange, yRange };
+  return { id, radius, x, y, angle, speed, dx, dy, xRange, yRange };
 }
 
 function isCircle(item) {
@@ -220,7 +221,11 @@ function applyMoveLeftOrRight(circle) {
     if (isInRange(c.x + c.dx, c.xRange)) {
       c.x += c.dx;
     } else {
-      c.dx = -c.dx;
+      c.angle = 180 - c.angle;
+      const { dx, dy } = getDxDy(c.angle, c.speed);
+      c.dx = dx;
+      c.dy = dy;
+      // c.dx = -c.dx;
     }
   }
   return c;
@@ -232,7 +237,11 @@ function applyMoveUpOrDown(circle) {
     if (isInRange(c.y + c.dy, c.yRange)) {
       c.y += c.dy;
     } else {
-      c.dy = -c.dy;
+      c.angle = 360 - c.angle;
+      const { dx, dy } = getDxDy(c.angle, c.speed);
+      c.dx = dx;
+      c.dy = dy;
+      // c.dy = -c.dy;
     }
   }
   return c;
