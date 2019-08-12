@@ -126,7 +126,10 @@ function makeCircles(len) {
   const circles = [];
   let count = len;
   while (count--) {
-    circles.push(createCircle(count));
+    const c = createCircle(count);
+    if (circles.every(circle => !isOverlap(c, circle))) {
+      circles.push(c);
+    }
   }
   circles.push(createPerson(++len));
   return circles;
@@ -190,16 +193,22 @@ function distance(x1, y1, x2, y2) {
   return Math.floor(Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)));
 }
 
-function isOverlap(person, circle) {
-  if (distance(person.x, person.y, circle.x, circle.y) <= circle.radius ||
-    distance(person.x + person.width, person.y, circle.x, circle.y) <= circle.radius ||
-    distance(person.x, person.y + person.height, circle.x, circle.y) <= circle.radius ||
-    distance(person.x + person.width, person.y + person.height, circle.x, circle.y) <= circle.radius
-  ) {
-    return true;
-  } else {
-    return false;
+function isOverlap(a, b) {
+  if (isPerson(a) || isRope(a)) {
+    if (distance(a.x, a.y, b.x, b.y) <= b.radius ||
+      distance(a.x + a.width, a.y, b.x, b.y) <= b.radius ||
+      distance(a.x, a.y + a.height, b.x, b.y) <= b.radius ||
+      distance(a.x + a.width, a.y + a.height, b.x, b.y) <= b.radius
+    ) {
+      return true;
+    }
   }
+
+  if (isCircle(a)) {
+    return distance(a.x, a.y, b.x, b.y) <= (a.radius + b.radius);
+  }
+
+  return false;
 }
 
 function isSomeOverlap(ropes, circle) {
@@ -269,6 +278,7 @@ function movePerson(person) {
       p.x -= 3;
     }
   }
+  global.key = null;
   return p;
 }
 
@@ -315,9 +325,10 @@ function addRope(circles) {
       p.id = circles.length;
       circles.push(createRope(p));
     }
-    if (global.prevKey === LEFT || global.prevKey === RIGHT) {
-      global.key = global.prevKey;
-    }
+    global.key = null;
+    // if (global.prevKey === LEFT || global.prevKey === RIGHT) {
+      // global.key = global.prevKey;
+    // }
   }
   return circles;
 }
@@ -455,7 +466,7 @@ function startAnimation(ctx) {
 }
 
 function processKeyEvent(e) {
-  global.prevKey = global.key;
+  // global.prevKey = global.key;
   global.key = e.keyCode;
   const letterPressed = String.fromCharCode(global.key)
   console.log(global.key, letterPressed.toLowerCase());
