@@ -291,8 +291,8 @@ const checkRope = rope => (
 );
 
 const applyStyle = filter => styleCb => circles => {
-  return circles.map(circle =>
-    filter(circle) ? styleCb(circle) : circle
+  return circles.map((circle, index, circles) =>
+    filter(circle, circles) ? styleCb(circle, circles) : circle
   );
 }
 
@@ -399,6 +399,11 @@ const checkTopOrBottom = item => (isBottom(item) || isTop(item)) ? countDown(ite
 const checkItemOnTheBottom = applyStyle(isCircleAndRed)(checkTopOrBottom);
 const checkTimeout = checkItemOnTheBottom;
 
+const checkCollideCircle = (circle, circles) => {
+  return true;
+}
+const hitTestCircle = applyStyle(checkCollideCircle)((circle, circles) => circle);
+
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
   const update = compose(
@@ -410,7 +415,8 @@ function startAnimation(ctx) {
     updateRope,
     checkPerson,
     checkCollisionRope,
-    checkTimeout
+    checkTimeout,
+    hitTestCircle
   );
   const draw = compose(
     drawCircles(ctx),
