@@ -211,8 +211,8 @@ function isOverlap(a, b) {
   return false;
 }
 
-function isSomeOverlap(ropes, circle) {
-  return ropes.some(rope => isOverlap(rope, circle));
+function isSomeOverlap(circles, circle) {
+  return circles.some(aCircle => isOverlap(aCircle, circle));
 }
 
 function isInRange(value, range) {
@@ -231,9 +231,8 @@ function applyMoveLeftOrRight(circle) {
       c.x += c.dx;
     } else {
       c.angle = 180 - c.angle;
-      const { dx, dy } = getDxDy(c.angle, c.speed);
+      const { dx } = getDxDy(c.angle, c.speed);
       c.dx = dx;
-      c.dy = dy;
       // c.dx = -c.dx;
     }
   }
@@ -247,8 +246,7 @@ function applyMoveUpOrDown(circle) {
       c.y += c.dy;
     } else {
       c.angle = 360 - c.angle;
-      const { dx, dy } = getDxDy(c.angle, c.speed);
-      c.dx = dx;
+      const { dy } = getDxDy(c.angle, c.speed);
       c.dy = dy;
       // c.dy = -c.dy;
     }
@@ -343,15 +341,16 @@ function checkOverlapPersonItem(circles, changeItem) {
   return circles;
 }
 
-function checkCollisionItem(circles, changeItem) {
-  const ropes = circles.filter(item => isRope(item));
-  if (Array.isArray(ropes) && ropes.length > 0) {
-    return circles.map(item => {
-      return isSomeOverlap(ropes, item) ? changeItem(item) : item;
+const checkCollision = filter => fn => circles => {
+  const filteredItems = circles.filter(item => filter(item));
+  if (Array.isArray(filteredItems) && filteredItems.length > 0) {
+    return circles.map(circle => {
+      return isSomeOverlap(filteredItems, circle) ? fn(circle) : circle;
     });
   }
   return circles;
 }
+
 
 const changeColor = color => item => {
   const newItem = clone(item);
@@ -367,43 +366,11 @@ const changeRadius = limit => fn => item => {
   return newItem;
 }
 
-const changeHalfSize = changeRadius(10)(x => x / 2);
-
 const checkPerson = circles => {
   return checkOverlapPersonItem(circles, () => ({}));
 };
 
-const checkCollision = (circles) => {
-  return checkCollisionItem(circles, changeColor('red'));
-}
-
-const halfSize = (circles) => {
-  return checkCollisionItem(circles, changeHalfSize);
-}
-
-const cloneCircle = (circles) => {
-  let addedCircles = [];
-  let newCircles = checkCollisionItem(circles, (item) => {
-    if (item.fillStyle !== 'red') {
-      const leftCircle = clone(item);
-      leftCircle.x -= leftCircle.radius*2;
-      leftCircle.dx = item.dx > 0 ? -leftCircle.dx : leftCircle.dx;
-      leftCircle.y -= leftCircle.radius*2;
-      leftCircle.fillStyle = 'red';
-      addedCircles.push(leftCircle);
-      const rightCircle = clone(item);
-      rightCircle.x += rightCircle.radius*2;
-      rightCircle.dx = item.dx > 0 ? rightCircle.dx : -rightCircle.dx;
-      rightCircle.y -= rightCircle.radius*2;
-      rightCircle.fillStyle = 'red';
-      addedCircles.push(rightCircle);
-      return {};
-    } else {
-      return item;
-    }
-  });
-  return newCircles.concat(addedCircles);
-}
+const checkCollisionRope = checkCollision(isRope)(changeColor('red'))
 
 function isBottom(item) {
   if ((item.y + item.radius) >= window.innerHeight) {
@@ -428,7 +395,6 @@ function countDown(item) {
     newItem.timeoutCount = 100;
   }
   newItem.timeoutCount--;
-  console.log(newItem.timeoutCount);
   return newItem.timeoutCount === 0 ? {} : newItem;
 }
 
@@ -447,8 +413,7 @@ function startAnimation(ctx) {
     addRope,
     updateRope,
     checkPerson,
-    checkCollision,
-    cloneCircle,
+    checkCollisionRope,
     checkTimeout
   );
   const draw = compose(
@@ -474,7 +439,6 @@ function processKeyEvent(e) {
 
 function processMouseEvent(e) {
   global.mouse = {x: e.x, y: e.y};
-  console.log(global.mouse);
 }
 
 function activate() {
