@@ -225,31 +225,27 @@ const applyMoveFreely = compose(
 );
 
 function applyMoveLeftOrRight(circle) {
+  if (circle.dx === undefined) return circle;
   const c = clone(circle);
-  if (c.dx) {
-    if (isInRange(c.x + c.dx, c.xRange)) {
-      c.x += c.dx;
-    } else {
-      c.angle = 180 - c.angle;
-      const { dx } = getDxDy(c.angle, c.speed);
-      c.dx = dx;
-      // c.dx = -c.dx;
-    }
+  if (isInRange(c.x + c.dx, c.xRange)) {
+    c.x += c.dx;
+  } else {
+    c.angle = 180 - c.angle;
+    const { dx } = getDxDy(c.angle, c.speed);
+    c.dx = dx;
   }
   return c;
 }
 
 function applyMoveUpOrDown(circle) {
+  if (circle.dy === undefined) return circle;
   const c = clone(circle);
-  if (c.dy) {
-    if (isInRange(c.y + c.dy, c.yRange)) {
-      c.y += c.dy;
-    } else {
-      c.angle = 360 - c.angle;
-      const { dy } = getDxDy(c.angle, c.speed);
-      c.dy = dy;
-      // c.dy = -c.dy;
-    }
+  if (isInRange(c.y + c.dy, c.yRange)) {
+    c.y += c.dy;
+  } else {
+    c.angle = 360 - c.angle;
+    const { dy } = getDxDy(c.angle, c.speed);
+    c.dy = dy;
   }
   return c;
 }
