@@ -400,7 +400,8 @@ const checkItemOnTheBottom = applyStyle(isCircleAndRed)(checkTopOrBottom);
 const checkTimeout = checkItemOnTheBottom;
 
 const checkCollideCircle = (circle, circles) => {
-  return true;
+  console.log(isSomeOverlap(circles, circle));
+  return isSomeOverlap(circles, circle);
 }
 const hitTestCircle = applyStyle(checkCollideCircle)((circle, circles) => circle);
 
