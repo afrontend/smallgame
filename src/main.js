@@ -290,9 +290,9 @@ const checkRope = rope => (
   isInRange(rope.y, rope.yRange) ? moveRope(rope) : {}
 );
 
-const applyStyle = filter => styleCb => circles => {
+const applyStyle = filter => style => circles => {
   return circles.map((circle, index, circles) =>
-    filter(circle, circles) ? styleCb(circle, circles) : circle
+    filter(circle, circles) ? style(circle) : circle
   );
 }
 
@@ -400,16 +400,16 @@ const checkItemOnTheBottom = applyStyle(isCircleAndRed)(checkTopOrBottom);
 const checkTimeout = checkItemOnTheBottom;
 
 const checkCollideCircle = (circle, circles) => {
-  console.log(isSomeOverlap(circles, circle));
-  return isSomeOverlap(circles, circle);
+  return isCircle(circle) && isSomeOverlap(circles, circle);
 }
+
 const hitTestCircle = applyStyle(checkCollideCircle)((circle, circles) => circle);
 
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
   const update = compose(
-    moveLeftOrRight,
     gravity,
+    moveLeftOrRight,
     moveFreely,
     updatePerson,
     addRope,
