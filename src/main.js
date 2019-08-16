@@ -65,6 +65,8 @@ function createCircle(count) {
   const radius = getRandomArbitrary(5, 100);
   const x = getRandomX(radius);
   const y = getRandomY(radius);
+  const nextX = x;
+  const nextY = y;
   const angle = getRandom(360);
   const speed = Math.abs(radius-100)/4;
   const { dx, dy } = getDxDy(angle, speed);
@@ -292,7 +294,7 @@ const checkRope = rope => (
 
 const applyStyle = filter => style => circles => {
   return circles.map((circle, index, circles) =>
-    filter(circle, circles) ? style(circle) : circle
+    filter(circle, circles) ? style(circle, circles) : circle
   );
 }
 
@@ -399,11 +401,15 @@ const checkTopOrBottom = item => (isBottom(item) || isTop(item)) ? countDown(ite
 const checkItemOnTheBottom = applyStyle(isCircleAndRed)(checkTopOrBottom);
 const checkTimeout = checkItemOnTheBottom;
 
-const checkCollideCircle = (circle, circles) => {
+const isCircleOverlap = (circle, circles) => {
   return isCircle(circle) && isSomeOverlap(circles, circle);
 }
 
-const hitTestCircle = applyStyle(checkCollideCircle)((circle, circles) => circle);
+const checkCollisionCircle = (circle, circles) => {
+  return circle;
+}
+
+const hitTestCircle = applyStyle(isCircleOverlap)(checkCollisionCircle);
 
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
