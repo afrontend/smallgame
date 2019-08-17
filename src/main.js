@@ -1,4 +1,4 @@
-const CIRCLES  = 99;
+const CIRCLES  = 9;
 const GRAVITY  = 0.1;
 const FRICTION = 0.7;
 const LEFT     = 37;
@@ -68,7 +68,7 @@ function createCircle(count) {
   const nextX = x;
   const nextY = y;
   const angle = getRandom(360);
-  const speed = Math.abs(radius-100)/4;
+  const speed = Math.abs(radius-100)/8;
   const { dx, dy } = getDxDy(angle, speed);
   const xRange = getXRange(radius);
   const yRange = getYRange(radius);
@@ -154,6 +154,33 @@ function drawCircle(ctx, circle) {
     ctx.lineWidth = circle.lineWidth;
   }
   ctx.fill();
+}
+
+function drawLine(ctx, circle) {
+  ctx.beginPath();
+  ctx.moveTo(circle.x, circle.y);
+  const { dx, dy } = getDxDy(circle.angle, circle.radius);
+  ctx.lineTo(circle.x + dx, circle.y + dy);
+  ctx.closePath();
+  ctx.stroke();
+
+  const c = clone(circle);
+  c.x = c.x + dx;
+  c.y = c.y + dy;
+  c.radius = c.radius/10;
+  c.fillStyle = "brown";
+  drawCircle(ctx, c);
+}
+
+const drawLines = ctx => {
+  return circles => {
+    circles.forEach(function(circle) {
+      if (isCircle(circle)) {
+        drawLine(ctx, circle)
+      }
+    });
+    return circles;
+  }
 }
 
 const drawCircles = ctx => {
@@ -266,12 +293,12 @@ function applyGravity(circle) {
 function movePerson(person) {
   const p = clone(person);
   if (global.key === RIGHT) {
-    if (isInRange(p.x + 3, p.xRange)) {
-      p.x += 3;
+    if (isInRange(p.x + 5, p.xRange)) {
+      p.x += 5;
     }
   } else if (global.key === LEFT) {
-    if (isInRange(p.x - 3, p.xRange)) {
-      p.x -= 3;
+    if (isInRange(p.x - 5, p.xRange)) {
+      p.x -= 5;
     }
   }
   global.key = null;
@@ -427,6 +454,7 @@ function startAnimation(ctx) {
   );
   const draw = compose(
     drawCircles(ctx),
+    drawLines(ctx),
     drawPerson(ctx),
     drawRope(ctx)
   );
