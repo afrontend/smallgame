@@ -1,4 +1,4 @@
-const CIRCLES  = 9;
+const CIRCLES  = 100;
 const GRAVITY  = 0.1;
 const FRICTION = 0.7;
 const LEFT     = 37;
@@ -144,19 +144,24 @@ function clearScreen(ctx) {
 function drawCircle(ctx, circle) {
   ctx.beginPath();
   ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI*2, false);
-  ctx.stroke();
   if (circle.fillStyle) {
     ctx.fillStyle = circle.fillStyle;
   } else {
     ctx.fillStyle = "rgba(20, 100, 20, 0.1)"
   }
+  if (circle.strokeStyle) {
+    ctx.strokeStyle = circle.strokeStyle;
+  } else {
+    ctx.strokeStyle = "black";
+  }
   if (circle.lineWidth) {
     ctx.lineWidth = circle.lineWidth;
   }
+  ctx.stroke();
   ctx.fill();
 }
 
-function drawLine(ctx, circle) {
+function drawDebugLine(ctx, circle) {
   ctx.beginPath();
   ctx.moveTo(circle.x, circle.y);
   const { dx, dy } = getDxDy(circle.angle, circle.radius);
@@ -167,31 +172,29 @@ function drawLine(ctx, circle) {
   const c = clone(circle);
   c.x = c.x + dx;
   c.y = c.y + dy;
-  c.radius = c.radius/10;
-  c.fillStyle = "brown";
+  c.radius = c.radius/15;
+  c.fillStyle = "black";
   drawCircle(ctx, c);
 }
 
-const drawLines = ctx => {
+const drawDebugLines = ctx => {
   return circles => {
     circles.forEach(function(circle) {
       if (isCircle(circle)) {
-        drawLine(ctx, circle)
+        drawDebugLine(ctx, circle)
       }
     });
     return circles;
   }
 }
 
-const drawCircles = ctx => {
-  return circles => {
-    circles.forEach(function(circle) {
-      if (isCircle(circle)) {
-        drawCircle(ctx, circle)
-      }
-    });
-    return circles;
-  }
+const drawCircles = ctx => circles => {
+  circles.forEach(function(circle) {
+    if (isCircle(circle)) {
+      drawCircle(ctx, circle)
+    }
+  });
+  return circles;
 }
 
 const drawPerson = ctx => {
@@ -240,8 +243,8 @@ function isOverlap(a, b) {
   return false;
 }
 
-function isSomeOverlap(circles, circle) {
-  return circles.some(aCircle => isOverlap(aCircle, circle));
+function isSomeOverlap(circles, circle, cIndex) {
+  return circles.some((aCircle, index) => cIndex !== undefined && index === cIndex ? false: isOverlap(aCircle, circle));
 }
 
 function isInRange(value, range) {
@@ -320,8 +323,8 @@ const checkRope = rope => (
 );
 
 const applyStyle = filter => style => circles => {
-  return circles.map((circle, index, circles) =>
-    filter(circle, circles) ? style(circle, circles) : circle
+  return circles.map((circle, index) =>
+    filter(circle, circles, index) ? style(circle, circles) : circle
   );
 }
 
@@ -428,15 +431,40 @@ const checkTopOrBottom = item => (isBottom(item) || isTop(item)) ? countDown(ite
 const checkItemOnTheBottom = applyStyle(isCircleAndRed)(checkTopOrBottom);
 const checkTimeout = checkItemOnTheBottom;
 
-const isCircleOverlap = (circle, circles) => {
-  return isCircle(circle) && isSomeOverlap(circles, circle);
+const isCircleOverlap = (circle, circles, index) => {
+  console.log(index, isSomeOverlap(circles, circle, index));
+  const hit = isCircle(circle) && isSomeOverlap(circles, circle, index);
+  if (hit) {
+    console.log("hit");
+  } else {
+    console.log("noHit");
+  }
+  return hit;
 }
 
 const checkCollisionCircle = (circle, circles) => {
-  return circle;
+  const c = clone(circle);
+  c.strokeStyle = 'red';
+  return c;
 }
 
-const hitTestCircle = applyStyle(isCircleOverlap)(checkCollisionCircle);
+const checkNotCollisionCircle = (circle, circles) => {
+  const c = clone(circle);
+  c.strokeStyle = 'black';
+  return c;
+}
+
+const hitTestCircle = compose(
+  applyStyle(isCircleOverlap)(checkCollisionCircle),
+  applyStyle(not(isCircleOverlap))(checkNotCollisionCircle)
+);
+
+const hitTest = circles => {
+  const cList = circles.filter(isCircle);
+  const notCList = circles.filter(not(isCircle));
+  const newCList = hitTestCircle(cList);
+  return notCList.concat(newCList);
+}
 
 function startAnimation(ctx) {
   let circles = makeCircles(CIRCLES);
@@ -445,16 +473,16 @@ function startAnimation(ctx) {
     moveLeftOrRight,
     moveFreely,
     updatePerson,
+    checkPerson,
     addRope,
     updateRope,
-    checkPerson,
     checkCollisionRope,
     checkTimeout,
-    hitTestCircle
+    hitTest
   );
   const draw = compose(
     drawCircles(ctx),
-    drawLines(ctx),
+    drawDebugLines(ctx),
     drawPerson(ctx),
     drawRope(ctx)
   );
