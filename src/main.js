@@ -154,24 +154,35 @@ function drawCircle(ctx, circle) {
   } else {
     ctx.strokeStyle = "black";
   }
-  if (circle.lineWidth) {
-    ctx.lineWidth = circle.lineWidth;
-  }
   ctx.stroke();
   ctx.fill();
 }
 
 function drawDebugLine(ctx, circle) {
   ctx.beginPath();
+  ctx.strokeStyle = 'pink';
   ctx.moveTo(circle.x, circle.y);
   const { dx, dy } = getDxDy(circle.angle, circle.radius);
   ctx.lineTo(circle.x + dx, circle.y + dy);
   ctx.closePath();
   ctx.stroke();
 
+  if (circle.cList) {
+    circle.cList.forEach(function (c) {
+      ctx.beginPath();
+      ctx.strokeStyle = 'pink';
+      ctx.moveTo(circle.x, circle.y);
+      ctx.lineTo(c.x, c.y);
+      ctx.closePath();
+      ctx.stroke();
+    });
+  }
+
   const c = clone(circle);
-  c.x = c.x + dx;
-  c.y = c.y + dy;
+  /*
+   * c.x = c.x + dx;
+   * c.y = c.y + dy;
+   */
   c.radius = c.radius/15;
   c.fillStyle = "black";
   drawCircle(ctx, c);
@@ -324,7 +335,7 @@ const checkRope = rope => (
 
 const applyStyle = filter => style => circles => {
   return circles.map((circle, index) =>
-    filter(circle, circles, index) ? style(circle, circles) : circle
+    filter(circle, circles, index) ? style(circle, circles, index) : circle
   );
 }
 
@@ -432,25 +443,33 @@ const checkItemOnTheBottom = applyStyle(isCircleAndRed)(checkTopOrBottom);
 const checkTimeout = checkItemOnTheBottom;
 
 const isCircleOverlap = (circle, circles, index) => {
-  console.log(index, isSomeOverlap(circles, circle, index));
-  const hit = isCircle(circle) && isSomeOverlap(circles, circle, index);
-  if (hit) {
-    console.log("hit");
-  } else {
-    console.log("noHit");
-  }
-  return hit;
+  return isCircle(circle) && isSomeOverlap(circles, circle, index);
 }
 
-const checkCollisionCircle = (circle, circles) => {
+const getOverlapCircles = (aCircle, circles, index) => {
+  return circles.filter(function(circle, cIndex) {
+    return cIndex !== index && isOverlap(circle, aCircle);
+  });
+}
+
+const checkCollisionCircle = (circle, circles, index) => {
+  const ovCircles = getOverlapCircles(circle, circles, index);
+  const cList = [];
+  if (ovCircles.length >= 1) {
+    ovCircles.forEach(function (circle) {
+      cList.push({x: circle.x, y: circle.y});
+    });
+  }
   const c = clone(circle);
   c.strokeStyle = 'red';
+  c.cList = cList;
   return c;
 }
 
 const checkNotCollisionCircle = (circle, circles) => {
   const c = clone(circle);
   c.strokeStyle = 'black';
+  c.cList = [];
   return c;
 }
 
