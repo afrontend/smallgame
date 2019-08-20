@@ -68,7 +68,7 @@ function createCircle(count) {
   const nextX = x;
   const nextY = y;
   const angle = getRandom(360);
-  const speed = Math.abs(radius-100)/8;
+  const speed = Math.abs(radius-100)/16;
   const { dx, dy } = getDxDy(angle, speed);
   const xRange = getXRange(radius);
   const yRange = getYRange(radius);
@@ -133,7 +133,7 @@ function makeCircles(len) {
       circles.push(c);
     }
   }
-  circles.push(createPerson(++len));
+  // circles.push(createPerson(++len));
   return circles;
 }
 
@@ -255,7 +255,7 @@ function isOverlap(a, b) {
 }
 
 function isSomeOverlap(circles, circle, cIndex) {
-  return circles.some((aCircle, index) => cIndex !== undefined && index === cIndex ? false: isOverlap(aCircle, circle));
+  return circles.some((aCircle, index) => cIndex !== undefined && index === cIndex ? false: isOverlap(widenCircle(aCircle), widenCircle(circle)));
 }
 
 function isInRange(value, range) {
@@ -442,13 +442,15 @@ const checkTopOrBottom = item => (isBottom(item) || isTop(item)) ? countDown(ite
 const checkItemOnTheBottom = applyStyle(isCircleAndRed)(checkTopOrBottom);
 const checkTimeout = checkItemOnTheBottom;
 
-const isCircleOverlap = (circle, circles, index) => {
-  return isCircle(circle) && isSomeOverlap(circles, circle, index);
+const widenCircle = (circle) => {
+  const c = clone(circle);
+  c.radius = c.radius + 20;
+  return c;
 }
 
 const getOverlapCircles = (aCircle, circles, index) => {
   return circles.filter(function(circle, cIndex) {
-    return cIndex !== index && isOverlap(circle, aCircle);
+    return cIndex !== index && isOverlap(widenCircle(circle), widenCircle(aCircle));
   });
 }
 
@@ -471,6 +473,10 @@ const checkNotCollisionCircle = (circle, circles) => {
   c.strokeStyle = 'black';
   c.cList = [];
   return c;
+}
+
+const isCircleOverlap = (circle, circles, index) => {
+  return isCircle(circle) && isSomeOverlap(circles, circle, index);
 }
 
 const hitTestCircle = compose(
