@@ -528,7 +528,7 @@ function processKeyEvent(e) {
 }
 
 function processMouseEvent(e) {
-  global.mouse = {x: e.x, y: e.y};
+  global.mouse = { x: e.x, y: e.y };
 }
 
 function activate() {
