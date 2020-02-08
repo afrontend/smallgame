@@ -70,8 +70,8 @@ function createCircle(count) {
   const angle = getRandom(360);
   const speed = Math.abs(radius-100)/16;
   const { dx, dy } = getDxDy(angle, speed);
-  const xRange = getXRange(radius);
   const yRange = getYRange(radius);
+  const xRange = getXRange(radius);
   return { id, radius, x, y, angle, speed, dx, dy, xRange, yRange };
 }
 
@@ -122,8 +122,8 @@ function isRope(item) {
     return true;
   }
   return false;
-}
 
+}
 function makeCircles(len) {
   const circles = [];
   let count = len;
